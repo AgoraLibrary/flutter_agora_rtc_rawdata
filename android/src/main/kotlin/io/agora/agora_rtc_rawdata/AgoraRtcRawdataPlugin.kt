@@ -1,4 +1,4 @@
-package com.example.agora_rtc_rawdata
+package io.agora.agora_rtc_rawdata
 
 import androidx.annotation.NonNull
 import io.agora.rtc.rawdata.base.AudioFrame
@@ -70,8 +70,9 @@ class AgoraRtcRawdataPlugin : FlutterPlugin, MethodCallHandler {
             }
 
             override fun onRenderVideoFrame(uid: Int, videoFrame: VideoFrame): Boolean {
-              Arrays.fill(videoFrame.getuBuffer(), -128)
-              Arrays.fill(videoFrame.getvBuffer(), -128)
+              // unsigned char value 255
+              Arrays.fill(videoFrame.getuBuffer(), -1)
+              Arrays.fill(videoFrame.getvBuffer(), -1)
               return true
             }
           }

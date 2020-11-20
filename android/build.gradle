@@ -1,4 +1,4 @@
-group 'com.example.agora_rtc_rawdata'
+group 'io.agora.agora_rtc_rawdata'
 version '1.0-SNAPSHOT'
 
 buildscript {

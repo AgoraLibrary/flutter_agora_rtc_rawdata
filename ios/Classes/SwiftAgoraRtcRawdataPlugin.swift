@@ -62,13 +62,15 @@ public class SwiftAgoraRtcRawdataPlugin: NSObject, FlutterPlugin, AgoraAudioFram
         return true
     }
 
-    public func onCapture(_: AgoraVideoFrame) -> Bool {
+    public func onCapture(_ videoFrame: AgoraVideoFrame) -> Bool {
+        memset(videoFrame.uBuffer, 0, Int(videoFrame.uStride * videoFrame.height) / 2)
+        memset(videoFrame.vBuffer, 0, Int(videoFrame.vStride * videoFrame.height) / 2)
         return true
     }
 
     public func onRenderVideoFrame(_ videoFrame: AgoraVideoFrame, uid _: UInt) -> Bool {
-        memset(videoFrame.uBuffer, 0, Int(videoFrame.uStride * videoFrame.height) / 2)
-        memset(videoFrame.vBuffer, 0, Int(videoFrame.vStride * videoFrame.height) / 2)
+        memset(videoFrame.uBuffer, 255, Int(videoFrame.uStride * videoFrame.height) / 2)
+        memset(videoFrame.vBuffer, 255, Int(videoFrame.vStride * videoFrame.height) / 2)
         return true
     }
 }

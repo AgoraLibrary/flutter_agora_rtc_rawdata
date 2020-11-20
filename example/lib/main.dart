@@ -68,19 +68,18 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Stack(
-          children: isJoined
-              ? [
-                  RtcLocalView.SurfaceView(),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      child: RtcRemoteView.SurfaceView(uid: remoteUid),
-                    ),
-                  )
-                ]
-              : [],
+          children: [
+            if (isJoined) RtcLocalView.SurfaceView(),
+            if (remoteUid != null)
+              Align(
+                alignment: Alignment.topLeft,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  child: RtcRemoteView.SurfaceView(uid: remoteUid),
+                ),
+              )
+          ],
         ),
       ),
     );
