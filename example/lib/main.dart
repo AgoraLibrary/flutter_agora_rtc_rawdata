@@ -15,15 +15,14 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  RtcEngine _engine = null;
-
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  RtcEngine engine;
   bool isJoined = false;
-  int remoteUid;
+  List<int> remoteUid = [];
 
   @override
   void initState() {
@@ -34,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     super.dispose();
-    widget._engine?.destroy();
+    this._deinitEngine();
   }
 
   _initEngine() async {
@@ -42,22 +41,40 @@ class _MyAppState extends State<MyApp> {
       await [Permission.microphone, Permission.camera].request();
     }
 
-    widget._engine = await RtcEngine.create(config.appId);
-    widget._engine?.setEventHandler(
+    var engine = await RtcEngine.create(config.appId);
+    setState(() {
+      this.engine = engine;
+    });
+    engine?.setEventHandler(
         RtcEngineEventHandler(joinChannelSuccess: (channel, uid, elapsed) {
       log('joinChannelSuccess $channel $uid $elapsed');
-      setState(() => isJoined = true);
+      setState(() {
+        isJoined = true;
+      });
     }, userJoined: (uid, elapsed) {
       log('userJoined  $uid $elapsed');
-      setState(() => remoteUid = uid);
+      setState(() {
+        remoteUid.add(uid);
+      });
+    }, userOffline: (uid, reason) {
+      log('userJoined  $uid $reason');
+      setState(() {
+        remoteUid.removeWhere((element) => element == uid);
+      });
     }));
-    await widget._engine.enableVideo();
+    await engine.enableVideo();
+    await engine.startPreview();
     await AgoraRtcRawdata.registerAudioFrameObserver(
-        await widget._engine.getNativeHandle());
+        await engine.getNativeHandle());
     await AgoraRtcRawdata.registerVideoFrameObserver(
-        await widget._engine.getNativeHandle());
-    await widget._engine
-        ?.joinChannel(config.token, config.channelId, null, config.uid);
+        await engine.getNativeHandle());
+    await engine?.joinChannel(config.token, config.channelId, null, config.uid);
+  }
+
+  _deinitEngine() async {
+    await AgoraRtcRawdata.unregisterAudioFrameObserver();
+    await AgoraRtcRawdata.unregisterVideoFrameObserver();
+    await engine?.destroy();
   }
 
   @override
@@ -69,14 +86,23 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Stack(
           children: [
-            if (isJoined) RtcLocalView.SurfaceView(),
+            if (engine != null) RtcLocalView.SurfaceView(),
             if (remoteUid != null)
               Align(
                 alignment: Alignment.topLeft,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  child: RtcRemoteView.SurfaceView(uid: remoteUid),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.of(remoteUid.map(
+                      (e) => Container(
+                        width: 120,
+                        height: 120,
+                        child: RtcRemoteView.SurfaceView(
+                          uid: e,
+                        ),
+                      ),
+                    )),
+                  ),
                 ),
               )
           ],
