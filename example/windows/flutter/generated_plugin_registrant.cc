@@ -2,11 +2,13 @@
 //  Generated file. Do not edit.
 //
 
+// clang-format off
+
 #include "generated_plugin_registrant.h"
 
-#include <agora_rtc_rawdata/agora_rtc_rawdata_plugin.h>
+#include <agora_rtc_engine/agora_rtc_engine_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  AgoraRtcRawdataPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("AgoraRtcRawdataPlugin"));
+  AgoraRtcEnginePluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("AgoraRtcEnginePlugin"));
 }

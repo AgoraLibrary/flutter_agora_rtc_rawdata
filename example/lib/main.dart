@@ -20,8 +20,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  RtcEngine engine;
-  bool isJoined = false;
+  late RtcEngine engine;
+  bool startPreview = false, isJoined = false;
   List<int> remoteUid = [];
 
   @override
@@ -41,11 +41,8 @@ class _MyAppState extends State<MyApp> {
       await [Permission.microphone, Permission.camera].request();
     }
 
-    var engine = await RtcEngine.create(config.appId);
-    setState(() {
-      this.engine = engine;
-    });
-    engine?.setEventHandler(
+    engine = await RtcEngine.create(config.appId);
+    engine.setEventHandler(
         RtcEngineEventHandler(joinChannelSuccess: (channel, uid, elapsed) {
       log('joinChannelSuccess $channel $uid $elapsed');
       setState(() {
@@ -64,17 +61,21 @@ class _MyAppState extends State<MyApp> {
     }));
     await engine.enableVideo();
     await engine.startPreview();
-    await AgoraRtcRawdata.registerAudioFrameObserver(
-        await engine.getNativeHandle());
-    await AgoraRtcRawdata.registerVideoFrameObserver(
-        await engine.getNativeHandle());
-    await engine?.joinChannel(config.token, config.channelId, null, config.uid);
+    setState(() {
+      startPreview = true;
+    });
+    var handle = await engine.getNativeHandle();
+    if (handle != null) {
+      await AgoraRtcRawdata.registerAudioFrameObserver(handle);
+      await AgoraRtcRawdata.registerVideoFrameObserver(handle);
+    }
+    await engine.joinChannel(config.token, config.channelId, null, config.uid);
   }
 
   _deinitEngine() async {
     await AgoraRtcRawdata.unregisterAudioFrameObserver();
     await AgoraRtcRawdata.unregisterVideoFrameObserver();
-    await engine?.destroy();
+    await engine.destroy();
   }
 
   @override
@@ -86,25 +87,25 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Stack(
           children: [
-            if (engine != null) RtcLocalView.SurfaceView(),
-            if (remoteUid != null)
-              Align(
-                alignment: Alignment.topLeft,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.of(remoteUid.map(
-                      (e) => Container(
-                        width: 120,
-                        height: 120,
-                        child: RtcRemoteView.SurfaceView(
-                          uid: e,
-                        ),
+            if (startPreview) RtcLocalView.SurfaceView(),
+            Align(
+              alignment: Alignment.topLeft,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.of(remoteUid.map(
+                    (e) => Container(
+                      width: 120,
+                      height: 120,
+                      child: RtcRemoteView.SurfaceView(
+                        uid: e,
+                        channelId: config.channelId,
                       ),
-                    )),
-                  ),
+                    ),
+                  )),
                 ),
-              )
+              ),
+            )
           ],
         ),
       ),
