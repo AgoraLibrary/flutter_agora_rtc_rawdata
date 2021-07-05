@@ -1,3 +1,10 @@
+# [0.1.0](https://github.com/LichKing-2234/flutter_agora_rtc_rawdata/compare/v0.0.2...v0.1.0) (2021-07-05)
+
+
+### Features
+
+* support 4.0.5 ([56a3d96](https://github.com/LichKing-2234/flutter_agora_rtc_rawdata/commit/56a3d96c53950af102d8126a3e1d24c4d385c3cd))
+
 ## [0.0.2](https://github.com/LichKing-2234/flutter_agora_rtc_rawdata/compare/v0.0.1...v0.0.2) (2020-12-28)
 
 
