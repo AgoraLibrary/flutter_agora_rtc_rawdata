@@ -16,7 +16,7 @@ class AgoraRtcRawdata {
   }
 
   static Future<void> unregisterAudioFrameObserver() {
-    return _channel.invokeMethod('registerAudioFrameObserver');
+    return _channel.invokeMethod('unregisterAudioFrameObserver');
   }
 
   static Future<void> registerVideoFrameObserver(int engineHandle) {
