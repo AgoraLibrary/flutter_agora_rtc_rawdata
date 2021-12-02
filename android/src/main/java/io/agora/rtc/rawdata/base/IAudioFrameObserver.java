@@ -28,7 +28,7 @@ public abstract class IAudioFrameObserver {
 
   public void registerAudioFrameObserver() {
     if (nativeHandle == 0) {
-      engineHandle = nativeRegisterAudioFrameObserver(engineHandle);
+      nativeHandle = nativeRegisterAudioFrameObserver(engineHandle);
     }
   }
 
