@@ -40,6 +40,20 @@
 #define AGORA_CALL
 #endif
 
+#ifdef __GNUC__
+#define AGORA_GCC_VERSION_AT_LEAST(x, y) (__GNUC__ > (x) || __GNUC__ == (x) && __GNUC_MINOR__ >= (y))
+#else
+#define AGORA_GCC_VERSION_AT_LEAST(x, y) 0
+#endif
+
+#if AGORA_GCC_VERSION_AT_LEAST(3, 1)
+#define AGORA_DEPRECATED_ATTRIBUTE __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define AGORA_DEPRECATED_ATTRIBUTE
+#else
+#define AGORA_DEPRECATED_ATTRIBUTE
+#endif
+
 namespace agora {
 namespace util {
 
@@ -182,7 +196,7 @@ enum WARN_CODE_TYPE {
   /** 1021: Audio device module: the audio capturing frequency is abnormal, which may cause audio freezes. This abnormality is caused by high CPU usage. Agora recommends stopping other apps.
    */
   WARN_ADM_RECORD_MALFUNCTION = 1021,
-  /** 1025: The audio playback or capturing is interrupted by system events (such as a phone call).
+  /** 1025: The audio capture or playback is interrupted by a system call. If the audio capture or playback is required, remind your user to hang up the phone.
    */
   WARN_ADM_CALL_INTERRUPTION = 1025,
   /** 1029: During a call, the audio session category should be set to
@@ -198,7 +212,7 @@ enum WARN_CODE_TYPE {
   /** 1032: Audio Device Module: The playback audio voice is too low.
    */
   WARN_ADM_PLAYOUT_AUDIO_LOWLEVEL = 1032,
-  /** 1033: Audio device module: The audio capturing device is occupied.
+  /** 1033: The local audio capture device is occupied by another application. Remind your user to leave the channel, stop the audio capture in another application, and rejoin the channel in sequence.
    */
   WARN_ADM_RECORD_AUDIO_IS_ACTIVE = 1033,
   /** 1040: Audio device module: An exception occurs with the audio drive.
@@ -225,7 +239,7 @@ enum WARN_CODE_TYPE {
   /** 1054: Audio Processing Module: AI NS is closed, this can be triggered by manual settings or by performance detection modules.
    */
   WARN_APM_AINS_CLOSED = 1054,
-  /// @cond
+  /// @cond nodoc
   WARN_ADM_WIN_CORE_NO_RECORDING_DEVICE = 1322,
   /// @endcond
   /** 1323: Audio device module: No available playback device.
@@ -239,16 +253,16 @@ enum WARN_CODE_TYPE {
    * - Update the sound card drive.
    */
   WARN_ADM_WIN_CORE_IMPROPER_CAPTURE_RELEASE = 1324,
-  /** 1610: The origin resolution of the remote video is beyond the range where the super-resolution algorithm can be applied.
+  /** 1610: The original resolution of the remote user's video is beyond the range where super resolution can be applied.
    */
   WARN_SUPER_RESOLUTION_STREAM_OVER_LIMITATION = 1610,
-  /** 1611: Another user is already using the super-resolution algorithm.
+  /** 1611: Super resolution is already being used to boost another remote user's video.
    */
   WARN_SUPER_RESOLUTION_USER_COUNT_OVER_LIMITATION = 1611,
-  /** 1612: The device does not support the super-resolution algorithm.
+  /** 1612: The device does not support using super resolution.
    */
   WARN_SUPER_RESOLUTION_DEVICE_NOT_SUPPORTED = 1612,
-  /// @cond
+  /// @cond nodoc
   WARN_RTM_LOGIN_TIMEOUT = 2005,
   WARN_RTM_KEEP_ALIVE_TIMEOUT = 2009
   /// @endcond
@@ -416,7 +430,6 @@ enum ERROR_CODE_TYPE {
   ERR_ENCRYPTED_STREAM_NOT_ALLOWED_PUBLISH = 130,
   /** 134: The user account is invalid. */
   ERR_INVALID_USER_ACCOUNT = 134,
-
   /** 151: CDN related errors. Remove the original URL address and add a new one by calling the \ref agora::rtc::IRtcEngine::removePublishStreamUrl "removePublishStreamUrl" and \ref agora::rtc::IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" methods.
    */
   ERR_PUBLISH_STREAM_CDN_ERROR = 151,
@@ -441,14 +454,6 @@ enum ERROR_CODE_TYPE {
    *
    */
   ERR_MODULE_NOT_FOUND = 157,
-  /// @cond
-  /** 158: The dynamical library for the super-resolution algorithm is not integrated.
-   * When you call the \ref agora::rtc::IRtcEngine::enableRemoteSuperResolution "enableRemoteSuperResolution" method but
-   * do not integrate the dynamical library for the super-resolution algorithm
-   * into your project, the SDK reports this error code.
-   */
-  ERR_MODULE_SUPER_RESOLUTION_NOT_FOUND = 158,
-  /// @endcond
 
   /** 160: The client is already recording audio. To start a new recording,
    * call \ref agora::rtc::IRtcEngine::stopAudioRecording "stopAudioRecording" to stop
@@ -555,38 +560,25 @@ enum ERROR_CODE_TYPE {
    * device.
    */
   ERR_ADM_START_LOOPBACK = 1023,
-  /** 1027: Audio Device Module: No recording permission exists. Check if the
-   *  recording permission is granted.
+  /** 1027: The application does not have permission to use the microphone. Remind your user to grant permission and rejoin the channel.
    */
   ERR_ADM_NO_PERMISSION = 1027,
-  /** 1033: Audio device module: The device is occupied.
+  /** 1033: The local audio capture device is occupied by another application. Remind your user to leave the channel, stop the audio capture in another application, and rejoin the channel in sequence.
    */
   ERR_ADM_RECORD_AUDIO_IS_ACTIVE = 1033,
   /** 1101: Audio device module: A fatal exception occurs.
    */
   ERR_ADM_ANDROID_JNI_JAVA_RESOURCE = 1101,
-  /** 1108: Audio device module: The capturing frequency is lower than 50.
-   * 0 indicates that the capturing is not yet started. We recommend
-   * checking your recording permission.
+  /** 1108: An exception occurred in the audio capture thread. Remind your user to rejoin the channel.
    */
   ERR_ADM_ANDROID_JNI_NO_RECORD_FREQUENCY = 1108,
-  /** 1109: The playback frequency is lower than 50. 0 indicates that the
-   * playback is not yet started. We recommend checking if you have created
-   * too many AudioTrack instances.
+  /** 1109: An exception occurred in the audio playback thread. Remind your user to rejoin the channel.
    */
   ERR_ADM_ANDROID_JNI_NO_PLAYBACK_FREQUENCY = 1109,
-  /** 1111: Audio device module: AudioRecord fails to start up. A ROM system
-   * error occurs. We recommend the following options to debug:
-   * - Restart your App.
-   * - Restart your cellphone.
-   * - Check your recording permission.
+  /** 1111: Failed to start the local audio capture. Remind your user to rejoin the channel.
    */
   ERR_ADM_ANDROID_JNI_JAVA_START_RECORD = 1111,
-  /** 1112: Audio device module: AudioTrack fails to start up. A ROM system
-   * error occurs. We recommend the following options to debug:
-   * - Restart your App.
-   * - Restart your cellphone.
-   * - Check your playback permission.
+  /** 1112: Failed to start the local audio playback. Remind your user to rejoin the channel.
    */
   ERR_ADM_ANDROID_JNI_JAVA_START_PLAYBACK = 1112,
   /** 1115: Audio device module: AudioRecord returns error. The SDK will
@@ -594,13 +586,13 @@ enum ERROR_CODE_TYPE {
   ERR_ADM_ANDROID_JNI_JAVA_RECORD_ERROR = 1115,
   /** **DEPRECATED** */
   ERR_ADM_ANDROID_OPENSL_CREATE_ENGINE = 1151,
-  /** **DEPRECATED** */
+  /** 1153: Failed to create Audio Recorder. Remind your user to rejoin the channel. */
   ERR_ADM_ANDROID_OPENSL_CREATE_AUDIO_RECORDER = 1153,
-  /** **DEPRECATED** */
+  /** 1156: Failed to start the local audio capture. Remind your user to rejoin the channel. */
   ERR_ADM_ANDROID_OPENSL_START_RECORDER_THREAD = 1156,
-  /** **DEPRECATED** */
+  /** 1157: Failed to create Audio Player. Remind your user to rejoin the channel. */
   ERR_ADM_ANDROID_OPENSL_CREATE_AUDIO_PLAYER = 1157,
-  /** **DEPRECATED** */
+  /** 1160: Failed to start the local audio playback. Remind your user to rejoin the channel. */
   ERR_ADM_ANDROID_OPENSL_START_PLAYER_THREAD = 1160,
   /** 1201: Audio device module: The current device does not support audio
    * input, possibly because you have mistakenly configured the audio session
@@ -718,7 +710,7 @@ enum ERROR_CODE_TYPE {
   ERR_ADM_NO_PLAYOUT_DEVICE = 1360,
 
   // VDM error code starts from 1500
-  /// @cond
+  /// @cond nodoc
   /** 1500: Video Device Module: There is no camera device.
    */
   ERR_VDM_CAMERA_NO_DEVICE = 1500,
@@ -772,7 +764,7 @@ enum LOG_FILTER_TYPE {
   LOG_FILTER_ERROR = 0x000c,
   /** 0x0008: Outputs CRITICAL level log information. */
   LOG_FILTER_CRITICAL = 0x0008,
-  /// @cond
+  /// @cond nodoc
   LOG_FILTER_MASK = 0x80f,
   /// @endcond
 };
