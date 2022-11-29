@@ -45,7 +45,7 @@ public abstract class IVideoFrameObserver {
 
   public void registerVideoFrameObserver() {
     if (nativeHandle == 0) {
-      engineHandle = nativeRegisterVideoFrameObserver(engineHandle);
+      nativeHandle = nativeRegisterVideoFrameObserver(engineHandle);
     }
   }
 
