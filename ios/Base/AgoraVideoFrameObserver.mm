@@ -18,7 +18,7 @@ public:
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
-      mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+      mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
       if (mediaEngine) {
         mediaEngine->registerVideoFrameObserver(this);
       }
@@ -29,7 +29,7 @@ public:
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
-      mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+      mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
       if (mediaEngine) {
         mediaEngine->registerVideoFrameObserver(nullptr);
       }
@@ -52,7 +52,8 @@ public:
     return true;
   }
 
-  bool onRenderVideoFrame(unsigned int uid, VideoFrame &videoFrame) override {
+  bool onRenderVideoFrame(const char *channelId, rtc::uid_t remoteUid,
+                          VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -62,7 +63,7 @@ public:
           [observerApple.delegate
               respondsToSelector:@selector(onRenderVideoFrame:uid:)]) {
         return [observerApple.delegate onRenderVideoFrame:videoFrameApple
-                                                      uid:uid];
+                                                      uid:remoteUid];
       }
     }
     return true;
@@ -80,10 +81,11 @@ public:
         return [observerApple.delegate onPreEncodeVideoFrame:videoFrameApple];
       }
     }
-    return IVideoFrameObserver::onPreEncodeVideoFrame(videoFrame);
+      
+      return false;
   }
 
-  VIDEO_FRAME_TYPE getVideoFormatPreference() override {
+  media::base::VIDEO_PIXEL_FORMAT getVideoFormatPreference() override {
     @autoreleasepool {
       AgoraVideoFrameObserver *observerApple =
           (__bridge AgoraVideoFrameObserver *)observer;
@@ -91,7 +93,7 @@ public:
           [observerApple.delegate
               respondsToSelector:@selector(getVideoFormatPreference)]) {
         return (
-            VIDEO_FRAME_TYPE)[observerApple.delegate getVideoFormatPreference];
+                media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate getVideoFormatPreference];
       }
     }
     return IVideoFrameObserver::getVideoFormatPreference();
@@ -123,19 +125,6 @@ public:
     return IVideoFrameObserver::getMirrorApplied();
   }
 
-  bool getSmoothRenderingEnabled() override {
-    @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(getSmoothRenderingEnabled)]) {
-        return [observerApple.delegate getSmoothRenderingEnabled];
-      }
-    }
-    return IVideoFrameObserver::getSmoothRenderingEnabled();
-  }
-
   uint32_t getObservedFramePosition() override {
     @autoreleasepool {
       AgoraVideoFrameObserver *observerApple =
@@ -149,37 +138,46 @@ public:
     return IVideoFrameObserver::getObservedFramePosition();
   }
 
-  bool isMultipleChannelFrameWanted() override {
-    @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(isMultipleChannelFrameWanted)]) {
-        return [observerApple.delegate isMultipleChannelFrameWanted];
-      }
-    }
-    return IVideoFrameObserver::isMultipleChannelFrameWanted();
+  bool onSecondaryCameraCaptureVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
   }
 
-  bool onRenderVideoFrameEx(const char *channelId, unsigned int uid,
-                            VideoFrame &videoFrame) override {
-    @autoreleasepool {
-      AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
-      NSString *channelIdApple = [NSString stringWithUTF8String:channelId];
+  bool onSecondaryPreEncodeCameraVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
 
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate respondsToSelector:@selector
-                                  (onRenderVideoFrameEx:channelId:uid:)]) {
-        return [observerApple.delegate onRenderVideoFrameEx:videoFrameApple
-                                                  channelId:channelIdApple
-                                                        uid:uid];
-      }
-    }
-    return IVideoFrameObserver::onRenderVideoFrameEx(channelId, uid,
-                                                     videoFrame);
+  bool onScreenCaptureVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
+
+  bool onPreEncodeScreenVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
+
+  bool onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
+                                                int mediaPlayerId) override {
+    return false;
+  }
+
+  bool onSecondaryScreenCaptureVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
+
+  bool onSecondaryPreEncodeScreenVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
+
+  bool onTranscodedVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+    return false;
+  }
+
+  media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE getVideoFrameProcessMode() override {
+    return IVideoFrameObserver::getVideoFrameProcessMode();
   }
 
 private:

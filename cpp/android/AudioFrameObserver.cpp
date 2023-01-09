@@ -19,11 +19,7 @@ AudioFrameObserver::AudioFrameObserver(JNIEnv *env, jobject jCaller,
   jOnPlaybackAudioFrameBeforeMixing =
       env->GetMethodID(jCallerClass, "onPlaybackAudioFrameBeforeMixing",
                        "(ILio/agora/rtc/rawdata/base/AudioFrame;)Z");
-  jIsMultipleChannelFrameWanted =
-      env->GetMethodID(jCallerClass, "isMultipleChannelFrameWanted", "()Z");
-  jOnPlaybackAudioFrameBeforeMixingEx = env->GetMethodID(
-      jCallerClass, "onPlaybackAudioFrameBeforeMixingEx",
-      "(Ljava/lang/String;ILio/agora/rtc/rawdata/base/AudioFrame;)Z");
+
   env->DeleteLocalRef(jCallerClass);
 
   jclass jAudioFrame = env->FindClass("io/agora/rtc/rawdata/base/AudioFrame");
@@ -37,7 +33,7 @@ AudioFrameObserver::AudioFrameObserver(JNIEnv *env, jobject jCaller,
   auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
   if (rtcEngine) {
     util::AutoPtr<media::IMediaEngine> mediaEngine;
-    mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+    mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
     if (mediaEngine) {
       mediaEngine->registerAudioFrameObserver(this);
     }
@@ -48,7 +44,7 @@ AudioFrameObserver::~AudioFrameObserver() {
   auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
   if (rtcEngine) {
     util::AutoPtr<media::IMediaEngine> mediaEngine;
-    mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+    mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
     if (mediaEngine) {
       mediaEngine->registerAudioFrameObserver(this);
     }
@@ -61,14 +57,12 @@ AudioFrameObserver::~AudioFrameObserver() {
   jOnPlaybackAudioFrame = nullptr;
   jOnMixedAudioFrame = nullptr;
   jOnPlaybackAudioFrameBeforeMixing = nullptr;
-  jIsMultipleChannelFrameWanted = nullptr;
-  jOnPlaybackAudioFrameBeforeMixingEx = nullptr;
 
   ats.env()->DeleteGlobalRef(jAudioFrameClass);
   jAudioFrameInit = nullptr;
 }
 
-bool AudioFrameObserver::onRecordAudioFrame(AudioFrame &audioFrame) {
+bool AudioFrameObserver::onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   jbyteArray arr = NativeToJavaByteArray(env, audioFrame);
@@ -81,7 +75,7 @@ bool AudioFrameObserver::onRecordAudioFrame(AudioFrame &audioFrame) {
   return ret;
 }
 
-bool AudioFrameObserver::onPlaybackAudioFrame(AudioFrame &audioFrame) {
+bool AudioFrameObserver::onPlaybackAudioFrame(const char* channelId, AudioFrame& audioFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   jbyteArray arr = NativeToJavaByteArray(env, audioFrame);
@@ -94,7 +88,7 @@ bool AudioFrameObserver::onPlaybackAudioFrame(AudioFrame &audioFrame) {
   return ret;
 }
 
-bool AudioFrameObserver::onMixedAudioFrame(AudioFrame &audioFrame) {
+bool AudioFrameObserver::onMixedAudioFrame(const char* channelId, AudioFrame& audioFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   jbyteArray arr = NativeToJavaByteArray(env, audioFrame);
@@ -108,7 +102,7 @@ bool AudioFrameObserver::onMixedAudioFrame(AudioFrame &audioFrame) {
 }
 
 bool AudioFrameObserver::onPlaybackAudioFrameBeforeMixing(
-    unsigned int uid, AudioFrame &audioFrame) {
+        const char* channelId, rtc::uid_t uid, AudioFrame& audioFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   jbyteArray arr = NativeToJavaByteArray(env, audioFrame);
@@ -122,35 +116,10 @@ bool AudioFrameObserver::onPlaybackAudioFrameBeforeMixing(
   return ret;
 }
 
-bool AudioFrameObserver::isMultipleChannelFrameWanted() {
-  AttachThreadScoped ats(jvm);
-  JNIEnv *env = ats.env();
-  jboolean ret =
-      env->CallBooleanMethod(jCallerRef, jIsMultipleChannelFrameWanted);
-  return ret;
-}
-
-bool AudioFrameObserver::onPlaybackAudioFrameBeforeMixingEx(
-    const char *channelId, unsigned int uid, AudioFrame &audioFrame) {
-  AttachThreadScoped ats(jvm);
-  JNIEnv *env = ats.env();
-  jbyteArray arr = NativeToJavaByteArray(env, audioFrame);
-  jobject obj = NativeToJavaAudioFrame(env, audioFrame, arr);
-  jstring str = env->NewStringUTF(channelId);
-  jboolean ret = env->CallBooleanMethod(
-      jCallerRef, jOnPlaybackAudioFrameBeforeMixingEx, str, uid, obj);
-  env->GetByteArrayRegion(arr, 0, env->GetArrayLength(arr),
-                          static_cast<jbyte *>(audioFrame.buffer));
-  env->DeleteLocalRef(arr);
-  env->DeleteLocalRef(obj);
-  env->DeleteLocalRef(str);
-  return ret;
-}
-
 jbyteArray AudioFrameObserver::NativeToJavaByteArray(JNIEnv *env,
                                                      AudioFrame &audioFrame) {
   int length =
-      audioFrame.samples * audioFrame.channels * audioFrame.bytesPerSample;
+      audioFrame.samplesPerChannel * audioFrame.channels * audioFrame.bytesPerSample;
 
   jbyteArray jByteArray = env->NewByteArray(length);
 
@@ -165,9 +134,34 @@ jobject AudioFrameObserver::NativeToJavaAudioFrame(JNIEnv *env,
                                                    AudioFrame &audioFrame,
                                                    jbyteArray jByteArray) {
   return env->NewObject(jAudioFrameClass, jAudioFrameInit, (int)audioFrame.type,
-                        audioFrame.samples, audioFrame.bytesPerSample,
+                        audioFrame.samplesPerChannel, (int)audioFrame.bytesPerSample,
                         audioFrame.channels, audioFrame.samplesPerSec,
                         jByteArray, audioFrame.renderTimeMs,
                         audioFrame.avsync_type);
 }
+
+    bool AudioFrameObserver::onEarMonitoringAudioFrame(
+            media::IAudioFrameObserverBase::AudioFrame &audioFrame) {
+        return false;
+    }
+
+    int AudioFrameObserver::getObservedAudioFramePosition() {
+        return 0;
+    }
+
+    media::IAudioFrameObserverBase::AudioParams AudioFrameObserver::getPlaybackAudioParams() {
+        return media::IAudioFrameObserverBase::AudioParams();
+    }
+
+    media::IAudioFrameObserverBase::AudioParams AudioFrameObserver::getRecordAudioParams() {
+        return media::IAudioFrameObserverBase::AudioParams();
+    }
+
+    media::IAudioFrameObserverBase::AudioParams AudioFrameObserver::getMixedAudioParams() {
+        return media::IAudioFrameObserverBase::AudioParams();
+    }
+
+    media::IAudioFrameObserverBase::AudioParams AudioFrameObserver::getEarMonitoringAudioParams() {
+        return media::IAudioFrameObserverBase::AudioParams();
+    }
 } // namespace agora
