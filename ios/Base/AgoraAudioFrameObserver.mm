@@ -18,7 +18,7 @@ public:
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
-      mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+      mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
       if (mediaEngine) {
         mediaEngine->registerAudioFrameObserver(this);
       }
@@ -29,7 +29,7 @@ public:
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
-      mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+      mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
       if (mediaEngine) {
         mediaEngine->registerAudioFrameObserver(nullptr);
       }
@@ -37,7 +37,7 @@ public:
   }
 
 public:
-  bool onRecordAudioFrame(AudioFrame &audioFrame) override {
+  bool onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -52,7 +52,7 @@ public:
     return true;
   }
 
-  bool onPlaybackAudioFrame(AudioFrame &audioFrame) override {
+  bool onPlaybackAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -67,7 +67,7 @@ public:
     return true;
   }
 
-  bool onMixedAudioFrame(AudioFrame &audioFrame) override {
+  bool onMixedAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -82,8 +82,8 @@ public:
     return true;
   }
 
-  bool onPlaybackAudioFrameBeforeMixing(unsigned int uid,
-                                        AudioFrame &audioFrame) override {
+  bool onPlaybackAudioFrameBeforeMixing(
+                                        const char* channelId, rtc::uid_t uid, AudioFrame& audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -100,47 +100,36 @@ public:
     return true;
   }
 
-  bool isMultipleChannelFrameWanted() override {
-    @autoreleasepool {
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(isMultipleChannelFrameWanted)]) {
-        return [observerApple.delegate isMultipleChannelFrameWanted];
-      }
-    }
-    return IAudioFrameObserver::isMultipleChannelFrameWanted();
+  bool onEarMonitoringAudioFrame(
+            media::IAudioFrameObserverBase::AudioFrame &audioFrame) override {
+    return false;
   }
 
-  bool onPlaybackAudioFrameBeforeMixingEx(const char *channelId,
-                                          unsigned int uid,
-                                          AudioFrame &audioFrame) override {
-    @autoreleasepool {
-      AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
+  int getObservedAudioFramePosition() override {
+    return 0;
+  }
 
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      NSString *channelIdApple = [NSString stringWithUTF8String:channelId];
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate respondsToSelector:@selector
-                                  (onPlaybackAudioFrameBeforeMixingEx:
-                                                            channelId:uid:)]) {
-        return [observerApple.delegate
-            onPlaybackAudioFrameBeforeMixingEx:audioFrameApple
-                                     channelId:channelIdApple
-                                           uid:uid];
-      }
-    }
-    return IAudioFrameObserver::onPlaybackAudioFrameBeforeMixingEx(
-        channelId, uid, audioFrame);
+  media::IAudioFrameObserverBase::AudioParams getPlaybackAudioParams() override {
+    return media::IAudioFrameObserverBase::AudioParams();
+  }
+
+  media::IAudioFrameObserverBase::AudioParams getRecordAudioParams() override {
+    return media::IAudioFrameObserverBase::AudioParams();
+  }
+
+  media::IAudioFrameObserverBase::AudioParams getMixedAudioParams() override {
+    return media::IAudioFrameObserverBase::AudioParams();
+  }
+
+  media::IAudioFrameObserverBase::AudioParams getEarMonitoringAudioParams() override {
+    return media::IAudioFrameObserverBase::AudioParams();
   }
 
 private:
   AgoraAudioFrame *NativeToAppleAudioFrame(AudioFrame &audioFrame) {
     AgoraAudioFrame *audioFrameApple = [[AgoraAudioFrame alloc] init];
     audioFrameApple.type = (AgoraAudioFrameType)audioFrame.type;
-    audioFrameApple.samples = audioFrame.samples;
+    audioFrameApple.samples = audioFrame.samplesPerChannel;
     audioFrameApple.bytesPerSample = audioFrame.bytesPerSample;
     audioFrameApple.channels = audioFrame.channels;
     audioFrameApple.samplesPerSec = audioFrame.samplesPerSec;

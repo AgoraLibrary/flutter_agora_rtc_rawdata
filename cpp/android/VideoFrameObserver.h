@@ -2,56 +2,80 @@
 
 #include "include/IAgoraMediaEngine.h"
 #include "include/IAgoraRtcEngine.h"
+#include "include/AgoraMediaBase.h"
 
 #include <jni.h>
 #include <vector>
 
 namespace agora {
-class VideoFrameObserver : public media::IVideoFrameObserver {
-public:
-  VideoFrameObserver(JNIEnv *env, jobject jCaller, long long EngineHandle);
-  virtual ~VideoFrameObserver();
+    class VideoFrameObserver : public media::IVideoFrameObserver {
+    public:
+        VideoFrameObserver(JNIEnv *env, jobject jCaller, long long EngineHandle);
 
-public:
-  bool onCaptureVideoFrame(VideoFrame &videoFrame) override;
-  bool onRenderVideoFrame(unsigned int uid, VideoFrame &videoFrame) override;
-  bool onPreEncodeVideoFrame(VideoFrame &videoFrame) override;
-  VIDEO_FRAME_TYPE getVideoFormatPreference() override;
-  bool getRotationApplied() override;
-  bool getMirrorApplied() override;
-  bool getSmoothRenderingEnabled() override;
-  uint32_t getObservedFramePosition() override;
-  bool isMultipleChannelFrameWanted() override;
-  bool onRenderVideoFrameEx(const char *channelId, unsigned int uid,
-                            VideoFrame &videoFrame) override;
+        virtual ~VideoFrameObserver();
 
-private:
-  std::vector<jbyteArray> NativeToJavaByteArray(JNIEnv *env,
-                                                VideoFrame &videoFrame);
-  jobject NativeToJavaVideoFrame(JNIEnv *env, VideoFrame &videoFrame,
-                                 std::vector<jbyteArray> jByteArray);
+    public:
+        bool onCaptureVideoFrame(VideoFrame &videoFrame) override;
 
-private:
-  JavaVM *jvm = nullptr;
+        bool onPreEncodeVideoFrame(VideoFrame &videoFrame) override;
 
-  jobject jCallerRef;
-  jmethodID jOnCaptureVideoFrame;
-  jmethodID jOnRenderVideoFrame;
-  jmethodID jOnPreEncodeVideoFrame;
-  jmethodID jGetVideoFormatPreference;
-  jmethodID jGetRotationApplied;
-  jmethodID jGetMirrorApplied;
-  jmethodID jGetSmoothRenderingEnabled;
-  jmethodID jGetObservedFramePosition;
-  jmethodID jIsMultipleChannelFrameWanted;
-  jmethodID jOnRenderVideoFrameEx;
+        bool onSecondaryCameraCaptureVideoFrame(VideoFrame &videoFrame) override;
 
-  jclass jVideoFrameClass;
-  jmethodID jVideoFrameInit;
+        bool onSecondaryPreEncodeCameraVideoFrame(VideoFrame &videoFrame) override;
 
-  jclass jVideoFrameTypeClass;
-  jmethodID jOrdinal;
+        bool onScreenCaptureVideoFrame(VideoFrame &videoFrame) override;
 
-  long long engineHandle;
-};
+        bool onPreEncodeScreenVideoFrame(VideoFrame &videoFrame) override;
+
+        bool onMediaPlayerVideoFrame(VideoFrame &videoFrame, int mediaPlayerId) override;
+
+        bool onSecondaryScreenCaptureVideoFrame(VideoFrame &videoFrame) override;
+
+        bool onSecondaryPreEncodeScreenVideoFrame(VideoFrame &videoFrame) override;
+
+        bool onRenderVideoFrame(const char *channelId, rtc::uid_t remoteUid,
+                                VideoFrame &videoFrame) override;
+
+        bool onTranscodedVideoFrame(VideoFrame &videoFrame) override;
+
+
+        VIDEO_FRAME_PROCESS_MODE getVideoFrameProcessMode() override;
+
+
+        media::base::VIDEO_PIXEL_FORMAT getVideoFormatPreference() override;
+
+        bool getRotationApplied() override;
+
+        bool getMirrorApplied() override;
+
+        uint32_t getObservedFramePosition() override;
+
+
+    private:
+        std::vector<jbyteArray> NativeToJavaByteArray(JNIEnv *env,
+                                                      VideoFrame &videoFrame);
+
+        jobject NativeToJavaVideoFrame(JNIEnv *env, VideoFrame &videoFrame,
+                                       std::vector<jbyteArray> jByteArray);
+
+    private:
+        JavaVM *jvm = nullptr;
+
+        jobject jCallerRef;
+        jmethodID jOnCaptureVideoFrame;
+        jmethodID jOnRenderVideoFrame;
+        jmethodID jOnPreEncodeVideoFrame;
+        jmethodID jGetVideoFormatPreference;
+        jmethodID jGetRotationApplied;
+        jmethodID jGetMirrorApplied;
+        jmethodID jGetObservedFramePosition;
+
+        jclass jVideoFrameClass;
+        jmethodID jVideoFrameInit;
+
+        jclass jVideoFrameTypeClass;
+        jmethodID jOrdinal;
+
+        long long engineHandle;
+    };
 } // namespace agora

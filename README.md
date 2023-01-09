@@ -1,10 +1,10 @@
 # agora_rtc_rawdata
 
-The rawdata plugin for [agora_rtc_engine](https://pub.dev/packages/agora_rtc_engine).
+A flutter plugin that demostrate how to processing rawdata with [agora_rtc_engine](https://pub.dev/packages/agora_rtc_engine).
 
 ## Important
 
-The plugin only exports four methods to the dart layer that can register or unregister the observer.
+The example plugin only exports four methods to the dart layer that can register or unregister the observer.
 
 ```dart
 class AgoraRtcRawdata {
@@ -29,7 +29,7 @@ class AgoraRtcRawdata {
 }
 ```
 
-The plugin changes the color of the video stream by the default:
+The example plugin changes the color of the video stream by the default:
 
 * Change local video to green
 * Change remote video to pink
@@ -43,7 +43,7 @@ You can find the code at:
   * Local video: `onCapture`
   * Remote video: `onRenderVideoFrame`
 
-**If you can program with C++, you should process raw data on the C++ layer to improve performance and remove code about
+**If you can program with C++, you should process raw data on the C++ layer to remove code about
 calling Android and iOS.**
 
 You can find the code at:

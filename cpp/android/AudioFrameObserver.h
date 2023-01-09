@@ -12,15 +12,16 @@ public:
   virtual ~AudioFrameObserver();
 
 public:
-  bool onRecordAudioFrame(AudioFrame &audioFrame) override;
-  bool onPlaybackAudioFrame(AudioFrame &audioFrame) override;
-  bool onMixedAudioFrame(AudioFrame &audioFrame) override;
-  bool onPlaybackAudioFrameBeforeMixing(unsigned int uid,
-                                        AudioFrame &audioFrame) override;
-  bool isMultipleChannelFrameWanted() override;
-  bool onPlaybackAudioFrameBeforeMixingEx(const char *channelId,
-                                          unsigned int uid,
-                                          AudioFrame &audioFrame) override;
+    bool onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
+    bool onPlaybackAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
+    bool onMixedAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
+    bool onEarMonitoringAudioFrame(AudioFrame& audioFrame) override;
+    bool onPlaybackAudioFrameBeforeMixing(const char* channelId, rtc::uid_t uid, AudioFrame& audioFrame) override;
+    int getObservedAudioFramePosition() override;
+    AudioParams getPlaybackAudioParams() override;
+    AudioParams getRecordAudioParams() override;
+    AudioParams getMixedAudioParams() override;
+    AudioParams getEarMonitoringAudioParams() override;
 
 private:
   jbyteArray NativeToJavaByteArray(JNIEnv *env, AudioFrame &audioFrame);
@@ -35,8 +36,6 @@ private:
   jmethodID jOnPlaybackAudioFrame;
   jmethodID jOnMixedAudioFrame;
   jmethodID jOnPlaybackAudioFrameBeforeMixing;
-  jmethodID jIsMultipleChannelFrameWanted;
-  jmethodID jOnPlaybackAudioFrameBeforeMixingEx;
 
   jclass jAudioFrameClass;
   jmethodID jAudioFrameInit;

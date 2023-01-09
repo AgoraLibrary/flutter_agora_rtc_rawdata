@@ -22,15 +22,9 @@ VideoFrameObserver::VideoFrameObserver(JNIEnv *env, jobject jCaller,
   jGetRotationApplied =
       env->GetMethodID(jCallerClass, "getRotationApplied", "()Z");
   jGetMirrorApplied = env->GetMethodID(jCallerClass, "getMirrorApplied", "()Z");
-  jGetSmoothRenderingEnabled =
-      env->GetMethodID(jCallerClass, "getSmoothRenderingEnabled", "()Z");
   jGetObservedFramePosition =
       env->GetMethodID(jCallerClass, "getObservedFramePosition", "()I");
-  jIsMultipleChannelFrameWanted =
-      env->GetMethodID(jCallerClass, "isMultipleChannelFrameWanted", "()Z");
-  jOnRenderVideoFrameEx = env->GetMethodID(
-      jCallerClass, "onRenderVideoFrameEx",
-      "(Ljava/lang/String;ILio/agora/rtc/rawdata/base/VideoFrame;)Z");
+
   env->DeleteLocalRef(jCallerClass);
 
   jclass jVideoFrame = env->FindClass("io/agora/rtc/rawdata/base/VideoFrame");
@@ -50,7 +44,7 @@ VideoFrameObserver::VideoFrameObserver(JNIEnv *env, jobject jCaller,
   auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
   if (rtcEngine) {
     util::AutoPtr<media::IMediaEngine> mediaEngine;
-    mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+    mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
     if (mediaEngine) {
       mediaEngine->registerVideoFrameObserver(this);
     }
@@ -61,7 +55,7 @@ VideoFrameObserver::~VideoFrameObserver() {
   auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
   if (rtcEngine) {
     util::AutoPtr<media::IMediaEngine> mediaEngine;
-    mediaEngine.queryInterface(rtcEngine, AGORA_IID_MEDIA_ENGINE);
+    mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
     if (mediaEngine) {
       mediaEngine->registerVideoFrameObserver(nullptr);
     }
@@ -76,10 +70,7 @@ VideoFrameObserver::~VideoFrameObserver() {
   jGetVideoFormatPreference = nullptr;
   jGetRotationApplied = nullptr;
   jGetMirrorApplied = nullptr;
-  jGetSmoothRenderingEnabled = nullptr;
   jGetObservedFramePosition = nullptr;
-  jIsMultipleChannelFrameWanted = nullptr;
-  jOnRenderVideoFrameEx = nullptr;
 
   ats.env()->DeleteGlobalRef(jVideoFrameClass);
   jVideoFrameInit = nullptr;
@@ -112,14 +103,14 @@ bool VideoFrameObserver::onCaptureVideoFrame(VideoFrame &videoFrame) {
   return ret;
 }
 
-bool VideoFrameObserver::onRenderVideoFrame(unsigned int uid,
-                                            VideoFrame &videoFrame) {
+bool VideoFrameObserver::onRenderVideoFrame(const char *channelId, rtc::uid_t remoteUid,
+                                                 VideoFrame &videoFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
   jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
   jboolean ret =
-      env->CallBooleanMethod(jCallerRef, jOnRenderVideoFrame, uid, obj);
+      env->CallBooleanMethod(jCallerRef, jOnRenderVideoFrame, remoteUid, obj);
   for (int i = 0; i < arr.size(); ++i) {
     jbyteArray jByteArray = arr[i];
     void *buffer = nullptr;
@@ -163,14 +154,14 @@ bool VideoFrameObserver::onPreEncodeVideoFrame(VideoFrame &videoFrame) {
   return ret;
 }
 
-VideoFrameObserver::VIDEO_FRAME_TYPE
+    media::base::VIDEO_PIXEL_FORMAT
 VideoFrameObserver::getVideoFormatPreference() {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   jobject obj = env->CallObjectMethod(jCallerRef, jGetVideoFormatPreference);
   jint ret = env->CallIntMethod(obj, jOrdinal);
   env->DeleteLocalRef(obj);
-  return (VIDEO_FRAME_TYPE)ret;
+  return (media::base::VIDEO_PIXEL_FORMAT)ret;
 }
 
 bool VideoFrameObserver::getRotationApplied() {
@@ -187,13 +178,6 @@ bool VideoFrameObserver::getMirrorApplied() {
   return ret;
 }
 
-bool VideoFrameObserver::getSmoothRenderingEnabled() {
-  AttachThreadScoped ats(jvm);
-  JNIEnv *env = ats.env();
-  jboolean ret = env->CallBooleanMethod(jCallerRef, jGetSmoothRenderingEnabled);
-  return ret;
-}
-
 uint32_t VideoFrameObserver::getObservedFramePosition() {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
@@ -201,60 +185,23 @@ uint32_t VideoFrameObserver::getObservedFramePosition() {
   return ret;
 }
 
-bool VideoFrameObserver::isMultipleChannelFrameWanted() {
-  AttachThreadScoped ats(jvm);
-  JNIEnv *env = ats.env();
-  jboolean ret =
-      env->CallBooleanMethod(jCallerRef, jIsMultipleChannelFrameWanted);
-  return ret;
-}
-
-bool VideoFrameObserver::onRenderVideoFrameEx(const char *channelId,
-                                              unsigned int uid,
-                                              VideoFrame &videoFrame) {
-  AttachThreadScoped ats(jvm);
-  JNIEnv *env = ats.env();
-  std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
-  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
-  jstring str = env->NewStringUTF(channelId);
-  jboolean ret =
-      env->CallBooleanMethod(jCallerRef, jOnRenderVideoFrameEx, str, uid, obj);
-  for (int i = 0; i < arr.size(); ++i) {
-    jbyteArray jByteArray = arr[i];
-    void *buffer = nullptr;
-    if (i == 0) {
-      buffer = videoFrame.yBuffer;
-    } else if (i == 1) {
-      buffer = videoFrame.uBuffer;
-    } else if (i == 2) {
-      buffer = videoFrame.vBuffer;
-    }
-    env->GetByteArrayRegion(jByteArray, 0, env->GetArrayLength(jByteArray),
-                            static_cast<jbyte *>(buffer));
-    env->DeleteLocalRef(jByteArray);
-  }
-  env->DeleteLocalRef(obj);
-  env->DeleteLocalRef(str);
-  return ret;
-}
-
 std::vector<jbyteArray>
 VideoFrameObserver::NativeToJavaByteArray(JNIEnv *env, VideoFrame &videoFrame) {
   int yLength, uLength, vLength;
   switch (videoFrame.type) {
-  case FRAME_TYPE_YUV420: {
+      case agora::media::base::VIDEO_PIXEL_FORMAT::VIDEO_PIXEL_I420: {
     yLength = videoFrame.yStride * videoFrame.height;
     uLength = videoFrame.uStride * videoFrame.height / 2;
     vLength = videoFrame.vStride * videoFrame.height / 2;
     break;
   }
-  case FRAME_TYPE_YUV422: {
+  case agora::media::base::VIDEO_PIXEL_FORMAT::VIDEO_PIXEL_I422: {
     yLength = videoFrame.yStride * videoFrame.height;
     uLength = videoFrame.uStride * videoFrame.height;
     vLength = videoFrame.vStride * videoFrame.height;
     break;
   }
-  case FRAME_TYPE_RGBA: {
+  case agora::media::base::VIDEO_PIXEL_FORMAT::VIDEO_PIXEL_RGBA: {
     yLength = videoFrame.width * videoFrame.height * 4;
     uLength = 0;
     vLength = 0;
@@ -268,15 +215,15 @@ VideoFrameObserver::NativeToJavaByteArray(JNIEnv *env, VideoFrame &videoFrame) {
 
   if (videoFrame.yBuffer) {
     env->SetByteArrayRegion(jYArray, 0, yLength,
-                            static_cast<const jbyte *>(videoFrame.yBuffer));
+                            reinterpret_cast<const jbyte *>(videoFrame.yBuffer));
   }
   if (videoFrame.uBuffer) {
     env->SetByteArrayRegion(jUArray, 0, vLength,
-                            static_cast<const jbyte *>(videoFrame.uBuffer));
+                            reinterpret_cast<const jbyte *>(videoFrame.uBuffer));
   }
   if (videoFrame.vBuffer) {
     env->SetByteArrayRegion(jVArray, 0, uLength,
-                            static_cast<const jbyte *>(videoFrame.vBuffer));
+                            reinterpret_cast<const jbyte *>(videoFrame.vBuffer));
   }
 
   std::vector<jbyteArray> vector;
@@ -298,4 +245,50 @@ jobject VideoFrameObserver::NativeToJavaVideoFrame(
                         jUArray, jVArray, videoFrame.rotation,
                         videoFrame.renderTimeMs, videoFrame.avsync_type);
 }
+
+    bool VideoFrameObserver::onSecondaryCameraCaptureVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool VideoFrameObserver::onSecondaryPreEncodeCameraVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool VideoFrameObserver::onScreenCaptureVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool VideoFrameObserver::onPreEncodeScreenVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool
+    VideoFrameObserver::onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
+                                                int mediaPlayerId) {
+        return false;
+    }
+
+    bool VideoFrameObserver::onSecondaryScreenCaptureVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool VideoFrameObserver::onSecondaryPreEncodeScreenVideoFrame(
+            media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    bool
+    VideoFrameObserver::onTranscodedVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) {
+        return false;
+    }
+
+    media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE
+    VideoFrameObserver::getVideoFrameProcessMode() {
+        return IVideoFrameObserver::getVideoFrameProcessMode();
+    }
 } // namespace agora
