@@ -183,6 +183,9 @@ public:
 private:
   AgoraVideoFrame *NativeToAppleVideoFrame(VideoFrame &videoFrame) {
     AgoraVideoFrame *videoFrameApple = [[AgoraVideoFrame alloc] init];
+    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for demostration purpose.
+    // If you need more format, please check the value of type of
+    // `VIDEO_PIXEL_FORMAT`
     videoFrameApple.type = (AgoraVideoFrameType)videoFrame.type;
     videoFrameApple.width = videoFrame.width;
     videoFrameApple.height = videoFrame.height;
