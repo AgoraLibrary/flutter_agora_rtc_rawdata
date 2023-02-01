@@ -10,9 +10,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, AgoraVideoFrameType) {
-  AgoraVideoFrameTypeYUV420 = 0,
-  AgoraVideoFrameTypeYUV422 = 1,
-  AgoraVideoFrameTypeYUVRGBA = 2,
+  AgoraVideoFrameTypeYUV420 = 1,
+  AgoraVideoFrameTypeYUV422 = 16,
+  AgoraVideoFrameTypeYUVRGBA = 4,
 };
 
 @interface AgoraVideoFrame : NSObject
