@@ -66,15 +66,20 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       startPreview = true;
     });
-    var handle = await engine.getNativeHandle();
-    await AgoraRtcRawdata.registerAudioFrameObserver(handle);
-    await AgoraRtcRawdata.registerVideoFrameObserver(handle);
 
     await engine.joinChannel(
         token: config.token,
         channelId: config.channelId,
         uid: config.uid,
-        options: ChannelMediaOptions());
+        options: ChannelMediaOptions(clientRoleType: ClientRoleType.clientRoleBroadcaster));
+    await engine.setRecordingAudioFrameParameters(
+        sampleRate: 48000,
+        channel: 2,
+        mode: RawAudioFrameOpModeType.rawAudioFrameOpModeReadOnly,
+        samplesPerCall: 1024);
+    var handle = await engine.getNativeHandle();
+    await AgoraRtcRawdata.registerAudioFrameObserver(handle);
+    await AgoraRtcRawdata.registerVideoFrameObserver(handle);
   }
 
   _deinitEngine() async {
