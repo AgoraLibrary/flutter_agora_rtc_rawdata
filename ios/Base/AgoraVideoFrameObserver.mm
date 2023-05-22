@@ -37,7 +37,7 @@ public:
   }
 
 public:
-  bool onCaptureVideoFrame(VideoFrame &videoFrame) override {
+  bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -45,8 +45,8 @@ public:
           (__bridge AgoraVideoFrameObserver *)observer;
       if (observerApple.delegate != nil &&
           [observerApple.delegate
-              respondsToSelector:@selector(onCaptureVideoFrame:)]) {
-        return [observerApple.delegate onCaptureVideoFrame:videoFrameApple];
+              respondsToSelector:@selector(onCaptureVideoFrame:frame:)]) {
+        return [observerApple.delegate onCaptureVideoFrame:type frame:videoFrameApple];
       }
     }
     return true;
@@ -69,7 +69,7 @@ public:
     return true;
   }
 
-  bool onPreEncodeVideoFrame(VideoFrame &videoFrame) override {
+  bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -77,11 +77,11 @@ public:
           (__bridge AgoraVideoFrameObserver *)observer;
       if (observerApple.delegate != nil &&
           [observerApple.delegate
-              respondsToSelector:@selector(onPreEncodeVideoFrame:)]) {
-        return [observerApple.delegate onPreEncodeVideoFrame:videoFrameApple];
+              respondsToSelector:@selector(onPreEncodeVideoFrame:frame:)]) {
+        return [observerApple.delegate onPreEncodeVideoFrame:type frame:videoFrameApple];
       }
     }
-      
+
       return false;
   }
 
@@ -138,37 +138,8 @@ public:
     return IVideoFrameObserver::getObservedFramePosition();
   }
 
-  bool onSecondaryCameraCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onSecondaryPreEncodeCameraVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onScreenCaptureVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
   bool onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
                                                 int mediaPlayerId) override {
-    return false;
-  }
-
-  bool onSecondaryScreenCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onSecondaryPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
     return false;
   }
 

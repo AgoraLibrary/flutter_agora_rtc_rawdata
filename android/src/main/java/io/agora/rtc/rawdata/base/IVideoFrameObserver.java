@@ -13,9 +13,9 @@ public abstract class IVideoFrameObserver {
     this.engineHandle = engineHandle;
   }
 
-  public abstract boolean onCaptureVideoFrame(@NonNull VideoFrame videoFrame);
+  public abstract boolean onCaptureVideoFrame(int sourceType, @NonNull VideoFrame videoFrame);
 
-  public boolean onPreEncodeVideoFrame(@NonNull VideoFrame videoFrame) {
+  public boolean onPreEncodeVideoFrame(int sourceType, @NonNull VideoFrame videoFrame) {
     return true;
   }
 

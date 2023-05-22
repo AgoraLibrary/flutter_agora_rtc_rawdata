@@ -9,13 +9,13 @@ VideoFrameObserver::VideoFrameObserver(JNIEnv *env, jobject jCaller,
   jclass jCallerClass = env->GetObjectClass(jCallerRef);
   jOnCaptureVideoFrame =
       env->GetMethodID(jCallerClass, "onCaptureVideoFrame",
-                       "(Lio/agora/rtc/rawdata/base/VideoFrame;)Z");
+                       "(ILio/agora/rtc/rawdata/base/VideoFrame;)Z");
   jOnRenderVideoFrame =
       env->GetMethodID(jCallerClass, "onRenderVideoFrame",
                        "(ILio/agora/rtc/rawdata/base/VideoFrame;)Z");
   jOnPreEncodeVideoFrame =
       env->GetMethodID(jCallerClass, "onPreEncodeVideoFrame",
-                       "(Lio/agora/rtc/rawdata/base/VideoFrame;)Z");
+                       "(ILio/agora/rtc/rawdata/base/VideoFrame;)Z");
   jGetVideoFormatPreference = env->GetMethodID(
       jCallerClass, "getVideoFormatPreference",
       "()Lio/agora/rtc/rawdata/base/VideoFrame$VideoFrameType;");
@@ -79,12 +79,12 @@ VideoFrameObserver::~VideoFrameObserver() {
   jOrdinal = nullptr;
 }
 
-bool VideoFrameObserver::onCaptureVideoFrame(VideoFrame &videoFrame) {
+bool VideoFrameObserver::onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
   jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
-  jboolean ret = env->CallBooleanMethod(jCallerRef, jOnCaptureVideoFrame, obj);
+  jboolean ret = env->CallBooleanMethod(jCallerRef, jOnCaptureVideoFrame, type, obj);
   for (int i = 0; i < arr.size(); ++i) {
     jbyteArray jByteArray = arr[i];
     void *buffer = nullptr;
@@ -129,13 +129,13 @@ bool VideoFrameObserver::onRenderVideoFrame(const char *channelId, rtc::uid_t re
   return ret;
 }
 
-bool VideoFrameObserver::onPreEncodeVideoFrame(VideoFrame &videoFrame) {
+bool VideoFrameObserver::onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
   jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
   jboolean ret =
-      env->CallBooleanMethod(jCallerRef, jOnPreEncodeVideoFrame, obj);
+      env->CallBooleanMethod(jCallerRef, jOnPreEncodeVideoFrame, type, obj);
   for (int i = 0; i < arr.size(); ++i) {
     jbyteArray jByteArray = arr[i];
     void *buffer = nullptr;
@@ -246,39 +246,9 @@ jobject VideoFrameObserver::NativeToJavaVideoFrame(
                         videoFrame.renderTimeMs, videoFrame.avsync_type);
 }
 
-    bool VideoFrameObserver::onSecondaryCameraCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
-        return false;
-    }
-
-    bool VideoFrameObserver::onSecondaryPreEncodeCameraVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
-        return false;
-    }
-
-    bool VideoFrameObserver::onScreenCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
-        return false;
-    }
-
-    bool VideoFrameObserver::onPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
-        return false;
-    }
-
     bool
     VideoFrameObserver::onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
                                                 int mediaPlayerId) {
-        return false;
-    }
-
-    bool VideoFrameObserver::onSecondaryScreenCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
-        return false;
-    }
-
-    bool VideoFrameObserver::onSecondaryPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) {
         return false;
     }
 

@@ -15,23 +15,11 @@ namespace agora {
         virtual ~VideoFrameObserver();
 
     public:
-        bool onCaptureVideoFrame(VideoFrame &videoFrame) override;
+        bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override;
 
-        bool onPreEncodeVideoFrame(VideoFrame &videoFrame) override;
-
-        bool onSecondaryCameraCaptureVideoFrame(VideoFrame &videoFrame) override;
-
-        bool onSecondaryPreEncodeCameraVideoFrame(VideoFrame &videoFrame) override;
-
-        bool onScreenCaptureVideoFrame(VideoFrame &videoFrame) override;
-
-        bool onPreEncodeScreenVideoFrame(VideoFrame &videoFrame) override;
+        bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override;
 
         bool onMediaPlayerVideoFrame(VideoFrame &videoFrame, int mediaPlayerId) override;
-
-        bool onSecondaryScreenCaptureVideoFrame(VideoFrame &videoFrame) override;
-
-        bool onSecondaryPreEncodeScreenVideoFrame(VideoFrame &videoFrame) override;
 
         bool onRenderVideoFrame(const char *channelId, rtc::uid_t remoteUid,
                                 VideoFrame &videoFrame) override;
