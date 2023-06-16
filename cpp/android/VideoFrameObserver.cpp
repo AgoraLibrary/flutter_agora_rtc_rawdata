@@ -212,30 +212,30 @@ VideoFrameObserver::NativeToJavaByteArray(JNIEnv *env, VideoFrame &videoFrame) {
   }
   }
 
-  jbyteArray jYArray = env->NewByteArray(yLength);
-  jbyteArray jUArray = env->NewByteArray(uLength);
-  jbyteArray jVArray = env->NewByteArray(vLength);
+  std::vector<jbyteArray> vector;
 
-  if (videoFrame.yBuffer) {
+  if (videoFrame.yBuffer && yLength > 0) {
+    jbyteArray jYArray = env->NewByteArray(yLength);
     env->SetByteArrayRegion(
         jYArray, 0, yLength,
         reinterpret_cast<const jbyte *>(videoFrame.yBuffer));
+    vector.push_back(jYArray);
   }
-  if (videoFrame.uBuffer) {
+  if (videoFrame.uBuffer && uLength > 0) {
+    jbyteArray jUArray = env->NewByteArray(uLength);
     env->SetByteArrayRegion(
-        jUArray, 0, vLength,
+        jUArray, 0, uLength,
         reinterpret_cast<const jbyte *>(videoFrame.uBuffer));
+    vector.push_back(jUArray);
   }
-  if (videoFrame.vBuffer) {
+  if (videoFrame.vBuffer && vLength > 0) {
+    jbyteArray jVArray = env->NewByteArray(vLength);
     env->SetByteArrayRegion(
-        jVArray, 0, uLength,
+        jVArray, 0, vLength,
         reinterpret_cast<const jbyte *>(videoFrame.vBuffer));
+    vector.push_back(jVArray);
   }
 
-  std::vector<jbyteArray> vector;
-  vector.push_back(jYArray);
-  vector.push_back(jUArray);
-  vector.push_back(jVArray);
   return vector;
 }
 

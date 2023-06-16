@@ -46,7 +46,7 @@ AudioFrameObserver::~AudioFrameObserver() {
     util::AutoPtr<media::IMediaEngine> mediaEngine;
     mediaEngine.queryInterface(rtcEngine, agora::rtc::AGORA_IID_MEDIA_ENGINE);
     if (mediaEngine) {
-      mediaEngine->registerAudioFrameObserver(this);
+      mediaEngine->registerAudioFrameObserver(nullptr);
     }
   }
 
