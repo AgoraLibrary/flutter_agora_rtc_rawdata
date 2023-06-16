@@ -16,7 +16,7 @@ dependencies:
   agora_rtc_engine:
     git:
       url: https://github.com/AgoraIO/Agora-Flutter-SDK.git
-      ref: littlegnal/special/native-4.1.1.6-build.3
+      ref: 6.1.1-sp.4116.b.2
 
 dev_dependencies:
   flutter_test:
