@@ -37,7 +37,8 @@ public:
   }
 
 public:
-  bool onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
+  bool onRecordAudioFrame(const char *channelId,
+                          AudioFrame &audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -52,7 +53,8 @@ public:
     return true;
   }
 
-  bool onPlaybackAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
+  bool onPlaybackAudioFrame(const char *channelId,
+                            AudioFrame &audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -67,7 +69,8 @@ public:
     return true;
   }
 
-  bool onMixedAudioFrame(const char* channelId, AudioFrame& audioFrame) override {
+  bool onMixedAudioFrame(const char *channelId,
+                         AudioFrame &audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -82,8 +85,8 @@ public:
     return true;
   }
 
-  bool onPlaybackAudioFrameBeforeMixing(
-                                        const char* channelId, rtc::uid_t uid, AudioFrame& audioFrame) override {
+  bool onPlaybackAudioFrameBeforeMixing(const char *channelId, rtc::uid_t uid,
+                                        AudioFrame &audioFrame) override {
     @autoreleasepool {
       AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
@@ -101,15 +104,14 @@ public:
   }
 
   bool onEarMonitoringAudioFrame(
-            media::IAudioFrameObserverBase::AudioFrame &audioFrame) override {
+      media::IAudioFrameObserverBase::AudioFrame &audioFrame) override {
     return false;
   }
 
-  int getObservedAudioFramePosition() override {
-    return 0;
-  }
+  int getObservedAudioFramePosition() override { return 0; }
 
-  media::IAudioFrameObserverBase::AudioParams getPlaybackAudioParams() override {
+  media::IAudioFrameObserverBase::AudioParams
+  getPlaybackAudioParams() override {
     return media::IAudioFrameObserverBase::AudioParams();
   }
 
@@ -121,7 +123,8 @@ public:
     return media::IAudioFrameObserverBase::AudioParams();
   }
 
-  media::IAudioFrameObserverBase::AudioParams getEarMonitoringAudioParams() override {
+  media::IAudioFrameObserverBase::AudioParams
+  getEarMonitoringAudioParams() override {
     return media::IAudioFrameObserverBase::AudioParams();
   }
 
@@ -143,7 +146,7 @@ private:
   void *observer;
   long long engineHandle;
 };
-}
+} // namespace agora
 
 @interface AgoraAudioFrameObserver ()
 @property(nonatomic) agora::AudioFrameObserver *observer;
