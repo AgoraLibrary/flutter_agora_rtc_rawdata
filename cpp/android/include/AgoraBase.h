@@ -3222,6 +3222,10 @@ struct LocalAudioStats
    * The playout delay of the device
    */
   int audioPlayoutDelay;
+  /**
+   * The audio delay of earsback, it is a estimated value.
+   */
+  int earMonitorDelay;
 };
 
 
@@ -4813,6 +4817,10 @@ enum AUDIO_FILE_RECORDING_TYPE {
    * 3: Records the mixed audio of the local and all remote users.
    */
   AUDIO_FILE_RECORDING_MIXED = 3,
+  /**
+   * 4: publish audio file recording.
+   */
+  AUDIO_FILE_RECORDING_PUBLISH = 4,
 };
 
 /**
@@ -4966,6 +4974,15 @@ virtual void OnPlaybackAudioEncodedFrame(const uint8_t* frameBuffer,  int length
 * @param audioEncodedFrameInfo Audio information after encoding. For details, see `EncodedAudioFrameInfo`.
 */
 virtual void OnMixedAudioEncodedFrame(const uint8_t* frameBuffer,  int length, const EncodedAudioFrameInfo& audioEncodedFrameInfo) = 0;
+
+/**
+* Occurs each time the SDK receives an encoded before-publish audio frame.
+* @param frameBuffer The pointer to the audio frame buffer.
+* @param length The data length of the audio frame.
+* @param audioEncodedFrameInfo The information of the encoded audio frame: EncodedAudioFrameInfo.
+
+*/
+virtual void OnPublishAudioEncodedFrame(const uint8_t* frameBuffer,  int length, const EncodedAudioFrameInfo& audioEncodedFrameInfo) = 0;
 
 virtual ~IAudioEncodedFrameObserver () {}
 };

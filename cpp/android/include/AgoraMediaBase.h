@@ -261,13 +261,18 @@ enum CONTENT_INSPECT_TYPE {
  */
 CONTENT_INSPECT_INVALID = 0,
 /**
+ * @deprecated
  * Content inspect type moderation
  */
-CONTENT_INSPECT_MODERATION = 1,
+CONTENT_INSPECT_MODERATION __deprecated = 1,
 /**
  * Content inspect type supervise
  */
-CONTENT_INSPECT_SUPERVISION = 2
+CONTENT_INSPECT_SUPERVISION = 2,
+/**
+ * Content inspect type image moderation
+ */
+CONTENT_INSPECT_IMAGE_MODERATION = 3
 };
 
 struct ContentInspectModule {
@@ -910,6 +915,10 @@ class IAudioFrameObserverBase {
      */
     int64_t renderTimeMs;
     /**
+     * The number of the audio track.
+     */
+    int audioTrackNumber;
+    /**
      * A reserved parameter.
      */
     int avsync_type;
@@ -921,6 +930,7 @@ class IAudioFrameObserverBase {
                    samplesPerSec(0),
                    buffer(NULL),
                    renderTimeMs(0),
+                   audioTrackNumber(0),
                    avsync_type(0) {}
   };
 
@@ -941,6 +951,9 @@ class IAudioFrameObserverBase {
     /** The position for observing the ear monitoring audio of the local user
      */
     AUDIO_FRAME_POSITION_EAR_MONITORING = 0x0010,
+    /** The position for observing the before-publish audio of the local user
+     */
+    AUDIO_FRAME_POSITION_BEFORE_PUBLISH = 0x0020,
   };
 
   struct AudioParams {
@@ -986,6 +999,19 @@ class IAudioFrameObserverBase {
    * - false: The recorded audio frame is invalid and is not encoded or sent.
    */
   virtual bool onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) = 0;
+  /**
+   * Occurs when the before-publishing audio frame is received.
+   * @param channelId The channel name
+   * @param audioFrame The reference to the audio frame: AudioFrame.
+   * @return
+   * - true: The recorded audio frame is valid and is encoded and sent.
+   * - false: The recorded audio frame is invalid and is not encoded or sent.
+   */
+  virtual bool onPublishAudioFrame(const char* channelId, AudioFrame& audioFrame)  {
+    (void) channelId;
+    (void) audioFrame;
+    return true;
+  }
   /**
    * Occurs when the playback audio frame is received.
    * @param channelId The channel name
@@ -1057,6 +1083,8 @@ class IAudioFrameObserverBase {
    @return Sets the audio format. See AgoraAudioParams.
    */
   virtual AudioParams getPlaybackAudioParams() = 0;
+
+  virtual AudioParams getPublishAudioParams() {return AudioParams();}
 
   /** Sets the audio recording format
    **Note**:
@@ -1286,6 +1314,10 @@ class IVideoFrameObserver {
    *
    * After pre-processing, you can send the processed video data back to the SDK by setting the
    * `videoFrame` parameter in this callback.
+   * 
+   * @note
+   * If the returned agora::media::base::VIDEO_PIXEL_DEFAULT format is specified by getVideoFormatPreference, 
+   * the video frame you get through onMediaPlayerVideoFrame is in agora::media::base::VIDEO_PIXEL_I420 format.
    *
    * @param videoFrame A pointer to the video frame: VideoFrame
    * @param mediaPlayerId ID of the mediaPlayer.

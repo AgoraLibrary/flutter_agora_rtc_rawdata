@@ -37,7 +37,8 @@ public:
   }
 
 public:
-  bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override {
+  bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
+                           VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -46,7 +47,8 @@ public:
       if (observerApple.delegate != nil &&
           [observerApple.delegate
               respondsToSelector:@selector(onCaptureVideoFrame:frame:)]) {
-        return [observerApple.delegate onCaptureVideoFrame:type frame:videoFrameApple];
+        return [observerApple.delegate onCaptureVideoFrame:type
+                                                     frame:videoFrameApple];
       }
     }
     return true;
@@ -69,7 +71,8 @@ public:
     return true;
   }
 
-  bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type, VideoFrame &videoFrame) override {
+  bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
+                             VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -78,11 +81,12 @@ public:
       if (observerApple.delegate != nil &&
           [observerApple.delegate
               respondsToSelector:@selector(onPreEncodeVideoFrame:frame:)]) {
-        return [observerApple.delegate onPreEncodeVideoFrame:type frame:videoFrameApple];
+        return [observerApple.delegate onPreEncodeVideoFrame:type
+                                                       frame:videoFrameApple];
       }
     }
 
-      return false;
+    return false;
   }
 
   media::base::VIDEO_PIXEL_FORMAT getVideoFormatPreference() override {
@@ -92,8 +96,8 @@ public:
       if (observerApple.delegate != nil &&
           [observerApple.delegate
               respondsToSelector:@selector(getVideoFormatPreference)]) {
-        return (
-                media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate getVideoFormatPreference];
+        return (media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate
+                                                     getVideoFormatPreference];
       }
     }
     return IVideoFrameObserver::getVideoFormatPreference();
@@ -138,25 +142,28 @@ public:
     return IVideoFrameObserver::getObservedFramePosition();
   }
 
-  bool onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
-                                                int mediaPlayerId) override {
+  bool
+  onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
+                          int mediaPlayerId) override {
     return false;
   }
 
-  bool onTranscodedVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+  bool onTranscodedVideoFrame(
+      media::IVideoFrameObserver::VideoFrame &videoFrame) override {
     return false;
   }
 
-  media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE getVideoFrameProcessMode() override {
-    return IVideoFrameObserver::getVideoFrameProcessMode();
+  media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE
+  getVideoFrameProcessMode() override {
+    return PROCESS_MODE_READ_WRITE;
   }
 
 private:
   AgoraVideoFrame *NativeToAppleVideoFrame(VideoFrame &videoFrame) {
     AgoraVideoFrame *videoFrameApple = [[AgoraVideoFrame alloc] init];
-    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for demostration purpose.
-    // If you need more format, please check the value of type of
-    // `VIDEO_PIXEL_FORMAT`
+    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for
+    // demostration purpose. If you need more format, please check the value of
+    // type of `VIDEO_PIXEL_FORMAT`
     videoFrameApple.type = (AgoraVideoFrameType)videoFrame.type;
     videoFrameApple.width = videoFrame.width;
     videoFrameApple.height = videoFrame.height;
@@ -176,7 +183,7 @@ private:
   void *observer;
   long long engineHandle;
 };
-}
+} // namespace agora
 
 @interface AgoraVideoFrameObserver ()
 @property(nonatomic) agora::VideoFrameObserver *observer;

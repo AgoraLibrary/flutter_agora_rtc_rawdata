@@ -61,6 +61,10 @@ public class SwiftAgoraRtcRawdataPlugin: NSObject, FlutterPlugin, AgoraAudioFram
     public func onPlaybackAudioFrame(beforeMixing _: AgoraAudioFrame, uid _: UInt) -> Bool {
         return true
     }
+    
+    public func getVideoFormatPreference() -> AgoraVideoFrameType {
+        return .YUV420
+    }
 
     public func onCaptureVideoFrame(_ sourceType: Int32, frame videoFrame: AgoraVideoFrame) -> Bool {
         memset(videoFrame.uBuffer, 0, Int(videoFrame.uStride * videoFrame.height) / 2)

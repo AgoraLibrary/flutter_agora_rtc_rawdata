@@ -1003,10 +1003,22 @@ struct ChannelMediaOptions {
   Optional<bool> publishCameraTrack;
   /**
    * Whether to publish the video of the secondary camera track.
-   * - `true`: (Default) Publish the video track of the secondary camera capturer.
-   * - `false`: Do not publish the video track of the secondary camera capturer.
+   * - `true`: Publish the video track of the secondary camera capturer.
+   * - `false`: (Default) Do not publish the video track of the secondary camera capturer.
    */
   Optional<bool> publishSecondaryCameraTrack;
+  /**
+   * Whether to publish the video of the third camera track.
+   * - `true`:  Publish the video track of the third camera capturer.
+   * - `false`: (Default) Do not publish the video track of the third camera capturer.
+   */
+  Optional<bool> publishThirdCameraTrack;
+  /**
+   * Whether to publish the video of the fourth camera track.
+   * - `true`:  Publish the video track of the fourth camera capturer.
+   * - `false`: (Default) Do not publish the video track of the fourth camera capturer.
+   */
+  Optional<bool> publishFourthCameraTrack;
   /**
    * Whether to publish the recorded audio.
    * - `true`: (Default) Publish the recorded audio.
@@ -1040,6 +1052,18 @@ struct ChannelMediaOptions {
    * - false: (Default) Do not publish the captured video from the secondary screen.
    */
   Optional<bool> publishSecondaryScreenTrack;
+  /**
+   * Whether to publish the captured video from the third screen:
+   * - true: Publish the captured video from the third screen.
+   * - false: (Default) Do not publish the captured video from the third screen.
+   */
+  Optional<bool> publishThirdScreenTrack;
+  /**
+   * Whether to publish the captured video from the fourth screen:
+   * - true: Publish the captured video from the fourth screen.
+   * - false: (Default) Do not publish the captured video from the fourth screen.
+   */
+  Optional<bool> publishFourthScreenTrack;
   #endif
 
   /**
@@ -1088,6 +1112,12 @@ struct ChannelMediaOptions {
   * - `false`: (Default) Do not publish the local transcoded video track.
   */
   Optional<bool> publishTrancodedVideoTrack;
+  /**
+  * Whether to publish the local mixed track.
+  * - `true`: Publish the audio track of local mixed track.
+  * - `false`: (Default) Do not publish the local mixed track.
+  */
+  Optional<bool> publishMixedAudioTrack;
   /**
    * Whether to automatically subscribe to all remote audio streams when the user joins a channel:
    * - `true`: (Default) Subscribe to all remote audio streams.
@@ -1190,6 +1220,8 @@ struct ChannelMediaOptions {
 
       SET_FROM(publishCameraTrack);
       SET_FROM(publishSecondaryCameraTrack);
+      SET_FROM(publishThirdCameraTrack);
+      SET_FROM(publishFourthCameraTrack);
       SET_FROM(publishMicrophoneTrack);
 #if defined(__ANDROID__) || (defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
       SET_FROM(publishScreenCaptureVideo);
@@ -1197,8 +1229,11 @@ struct ChannelMediaOptions {
 #else
       SET_FROM(publishScreenTrack);
       SET_FROM(publishSecondaryScreenTrack);
+      SET_FROM(publishThirdScreenTrack);
+      SET_FROM(publishFourthScreenTrack);
 #endif
       SET_FROM(publishTrancodedVideoTrack);
+      SET_FROM(publishMixedAudioTrack);
       SET_FROM(publishCustomAudioTrack);
       SET_FROM(publishCustomAudioTrackId);
       SET_FROM(publishCustomAudioTrackAec);
@@ -1233,6 +1268,8 @@ struct ChannelMediaOptions {
       BEGIN_COMPARE();
       ADD_COMPARE(publishCameraTrack);
       ADD_COMPARE(publishSecondaryCameraTrack);
+      ADD_COMPARE(publishThirdCameraTrack);
+      ADD_COMPARE(publishFourthCameraTrack);
       ADD_COMPARE(publishMicrophoneTrack);
 #if defined(__ANDROID__) || (defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
       ADD_COMPARE(publishScreenCaptureVideo);
@@ -1240,8 +1277,11 @@ struct ChannelMediaOptions {
 #else
       ADD_COMPARE(publishScreenTrack);
       ADD_COMPARE(publishSecondaryScreenTrack);
+      ADD_COMPARE(publishThirdScreenTrack);
+      ADD_COMPARE(publishFourthScreenTrack);
 #endif
       ADD_COMPARE(publishTrancodedVideoTrack);
+      ADD_COMPARE(publishMixedAudioTrack);
       ADD_COMPARE(publishCustomAudioTrack);
       ADD_COMPARE(publishCustomAudioTrackId);
       ADD_COMPARE(publishCustomAudioTrackAec);
@@ -1279,6 +1319,8 @@ struct ChannelMediaOptions {
 
         REPLACE_BY(publishCameraTrack);
         REPLACE_BY(publishSecondaryCameraTrack);
+        REPLACE_BY(publishThirdCameraTrack);
+        REPLACE_BY(publishFourthCameraTrack);
         REPLACE_BY(publishMicrophoneTrack);
 #if defined(__ANDROID__) || (defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
         REPLACE_BY(publishScreenCaptureVideo);
@@ -1286,8 +1328,11 @@ struct ChannelMediaOptions {
 #else
         REPLACE_BY(publishScreenTrack);
         REPLACE_BY(publishSecondaryScreenTrack);
+        REPLACE_BY(publishThirdScreenTrack);
+        REPLACE_BY(publishFourthScreenTrack);
 #endif
         REPLACE_BY(publishTrancodedVideoTrack);
+        REPLACE_BY(publishMixedAudioTrack);
         REPLACE_BY(publishCustomAudioTrack);
         REPLACE_BY(publishCustomAudioTrackId);
         REPLACE_BY(publishCustomAudioTrackAec);
@@ -3554,6 +3599,17 @@ class IRtcEngine : public agora::base::IEngineBase {
    */
   virtual int queryCodecCapability(CodecCapInfo* codec_info, int& size) = 0;
   
+  /**
+   * Queries the score of the current device.
+   *
+   * @return 
+   * > 0: If the value is greater than 0, it means that the device score has been retrieved and represents the score value.
+   * Most devices score between 60-100, with higher scores indicating better performance.
+   * 
+   * < 0: Failure.
+   */
+  virtual int queryDeviceScore() = 0;
+
   /**
    * Joins a channel.
    *
@@ -5909,6 +5965,27 @@ class IRtcEngine : public agora::base::IEngineBase {
                                                int samplesPerCall) = 0;
 
   /**
+   * Sets the audio recording format for the
+   * \ref agora::media::IAudioFrameObserver::onPublishAudioFrame "onPublishAudioFrame" callback.
+   *
+   * @param sampleRate The sample rate (Hz) of the audio data returned in the `onPublishAudioFrame` callback, which can set be
+   * as 8000, 16000, 32000, 44100, or 48000.
+   * @param channel The number of audio channels of the audio data returned in the `onPublishAudioFrame` callback, which can
+   * be set as 1 or 2:
+   * - 1: Mono.
+   * - 2: Stereo.
+   * @param mode This mode is deprecated.
+   * @param samplesPerCall not support. Sampling points in the called data returned in
+   * onPublishAudioFrame(). For example, it is usually set as 1024 for stream
+   * pushing.
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setPublishAudioFrameParameters(int sampleRate, int channel,
+                                               int samplesPerCall) = 0;
+
+  /**
    * Sets the audio playback format for the
    * \ref agora::media::IAudioFrameObserver::onPlaybackAudioFrame "onPlaybackAudioFrame" callback.
    *
@@ -7730,6 +7807,8 @@ class IRtcEngine : public agora::base::IEngineBase {
    * "IDirectCdnStreamingEventHandler".
    * @param publishUrl The url of the cdn used to publish the stream.
    * @param options The direct cdn streaming media options: DirectCdnStreamingMediaOptions.
+   * This API must pass an audio-related option, and temporarily cannot pass more than one. 
+   * Video-related options may not be passed, or one, but not multiple.
    *
    * @return
    * - 0: Success.

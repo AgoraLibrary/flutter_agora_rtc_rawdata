@@ -1900,6 +1900,18 @@ public:
    */
     virtual int takeSnapshotEx(const RtcConnection& connection, uid_t uid, const char* filePath)  = 0;
 
+    /** Enables the content inspect.
+    @param enabled Whether to enable content inspect:
+    - `true`: Yes.
+    - `false`: No.
+    @param config The configuration for the content inspection.
+    @param connection The RtcConnection object.
+    @return
+    - 0: Success.
+    - < 0: Failure.
+    */
+    virtual int enableContentInspectEx(bool enabled, const media::ContentInspectConfig &config, const RtcConnection& connection) = 0;
+
     /**
      @brief Start tracing media rendering events.
      @since v4.1.1

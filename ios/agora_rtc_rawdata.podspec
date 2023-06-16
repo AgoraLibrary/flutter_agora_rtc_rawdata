@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files = '**/*.{h,m,mm,swift}'
   s.dependency 'Flutter'
-  s.dependency 'AgoraRtcEngine_Special_iOS', '4.1.1.6'
+  s.dependency 'AgoraRtcEngine_iOS'
   s.platform = :ios, '8.0'
 
   # Flutter.framework does not contain a i386 slice.

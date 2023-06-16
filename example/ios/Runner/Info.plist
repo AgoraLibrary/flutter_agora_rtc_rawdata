@@ -28,6 +28,8 @@
 	<string>Camera</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Mic</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

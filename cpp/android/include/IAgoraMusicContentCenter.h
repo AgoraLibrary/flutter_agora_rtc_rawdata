@@ -227,37 +227,53 @@ class IMusicContentCenterEventHandler {
 public:
     /**
      * The music chart result callback; occurs when getMusicCharts method is called.
-     * @param requestId The request id same with return from getMusicCharts.
+     * 
+     * @param requestId The request id is same as that returned by getMusicCharts.
      * @param result The result of music chart collection
-     * @param error_code The status of the request. See MusicContentCenterStatusCode
+     * @param errorCode The status of the request. See MusicContentCenterStatusCode
      */
-    virtual void onMusicChartsResult(const char* requestId, agora_refptr<MusicChartCollection> result, MusicContentCenterStatusCode error_code) = 0;
+    virtual void onMusicChartsResult(const char* requestId, agora_refptr<MusicChartCollection> result, MusicContentCenterStatusCode errorCode) = 0;
 
     /**
      * Music collection, occurs when getMusicCollectionByMusicChartId or searchMusic method is called.
-     * @param requestId The request id is the same with that returned by getMusicCollectionByMusicChartId or searchMusic
+     * 
+     * @param requestId The request id is same as that returned by getMusicCollectionByMusicChartId or searchMusic
      * @param result The result of music collection
-     * @param error_code The status of the request. See MusicContentCenterStatusCode
+     * @param errorCode The status of the request. See MusicContentCenterStatusCode
      */
-    virtual void onMusicCollectionResult(const char* requestId, agora_refptr<MusicCollection> result, MusicContentCenterStatusCode error_code) = 0;
+    virtual void onMusicCollectionResult(const char* requestId, agora_refptr<MusicCollection> result, MusicContentCenterStatusCode errorCode) = 0;
 
     /**
      * Lyric url callback of getLyric, occurs when getLyric is called
-     * @param requestId The request id same with return from getLyric
+     * 
+     * @param requestId The request id is same as that returned by getLyric
+     * @param songCode Song code
      * @param lyricUrl  The lyric url of this music
-     * @param error_code The status of the request. See MusicContentCenterStatusCode
+     * @param errorCode The status of the request. See MusicContentCenterStatusCode
      */
-    virtual void onLyricResult(const char* requestId, const char* lyricUrl, MusicContentCenterStatusCode error_code) = 0;
+    virtual void onLyricResult(const char* requestId, int64_t songCode, const char* lyricUrl, MusicContentCenterStatusCode errorCode) = 0;
+
     /**
-     * preload process callback, occurs when preload is called
-     *
+     * Simple info callback of getSongSimpleInfo, occurs when getSongSimpleInfo is called
+     * 
+     * @param requestId The request id is same as that returned by getSongSimpleInfo.
+     * @param songCode Song code
+     * @param simpleinfo The metadata of the music.
+     * @param errorCode The status of the request. See MusicContentCenterStatusCode
+     */
+    virtual void onSongSimpleInfoResult(const char* requestId, int64_t songCode, const char* simpleInfo, MusicContentCenterStatusCode errorCode) = 0;
+
+    /**
+     * Preload process callback, occurs when preload is called
+     * 
+     * @param requestId The request id is same as that returned by preload.
      * @param songCode Song code
      * @param percent Preload progress (0 ~ 100)
      * @param lyricUrl  The lyric url of this music
      * @param status Preload status; see PreloadStatusCode.
-     * @param error_code The status of the request. See MusicContentCenterStatusCode
+     * @param errorCode The status of the request. See MusicContentCenterStatusCode
      */
-    virtual void onPreLoadEvent(int64_t songCode, int percent, const char* lyricUrl, PreloadStatusCode status, MusicContentCenterStatusCode error_code) = 0;
+    virtual void onPreLoadEvent(const char* requestId, int64_t songCode, int percent, const char* lyricUrl, PreloadStatusCode status, MusicContentCenterStatusCode errorCode) = 0;
 
     virtual ~IMusicContentCenterEventHandler() {};
 };
@@ -407,13 +423,26 @@ public:
     /**
      * Preload a media file with specified parameters.
      *
+     * @deprecated This method is deprecated. Use preload(int64_t songCode) instead.
+     * 
      * @param songCode The identifier of the media file that you want to play.
      * @param jsonOption The ext param, default is null.
      * @return
      * - 0: Success.
      * - < 0: Failure.
      */
-    virtual int preload(int64_t songCode, const char* jsonOption = nullptr) = 0;
+    virtual int preload(int64_t songCode, const char* jsonOption) __deprecated = 0;
+
+    /**
+     * Preload a media file with specified parameters.
+     * 
+     * @param requestId The request id you will get of this query, format is uuid.
+     * @param songCode The identifier of the media file that you want to play.
+     * @return
+     * - 0: Success.
+     * - < 0: Failure.
+     */
+    virtual int preload(agora::util::AString& requestId, int64_t songCode) = 0;
 
     /**
      * Remove a media file cache
@@ -462,6 +491,7 @@ public:
     /**
      * Get lyric of the music.
      *
+     * @param requestId The request id you will get of this query, format is uuid.
      * @param songCode The identifier of the media file that you want to play.
      * @param LyricType The type of the lyric file. 0:xml or 1:lrc.
      * @return
@@ -469,6 +499,31 @@ public:
      * - < 0: Failure.
      */
     virtual int getLyric(agora::util::AString& requestId, int64_t songCode, int32_t LyricType = 0) = 0;
+
+    /**
+     * Gets the metadata of a specific music. Once this method is called, the SDK triggers the onSongSimpleInfoResult callback to report the metadata of the music.
+     *
+     * @param requestId The request id you will get of this query, format is uuid.
+     * @param songCode The identifier of the media file.
+     * @return
+     * - 0: Success.
+     * - < 0: Failure.
+     */
+    virtual int getSongSimpleInfo(agora::util::AString& requestId, int64_t songCode) = 0;
+
+    /**
+     * Get internal songCodeKey from songCode and jsonOption
+     *
+     * @param songCode The identifier of the media file.
+     * @param jsonOption An extention parameter. The default value is null. it’s a json-format string and the `key` and `value` can be customized according to your scenarios.
+     * @param internalSongCode The identifier of internal 
+     * @return
+     * - 0: Success.
+     * - < 0: Failure.
+     */
+
+    virtual int getInternalSongCode(int64_t songCode, const char* jsonOption, int64_t& internalSongCode) = 0;
+
 };
 
 }  // namespace rtc

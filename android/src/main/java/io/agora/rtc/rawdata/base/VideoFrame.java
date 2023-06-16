@@ -1,7 +1,17 @@
 package io.agora.rtc.rawdata.base;
 
 public class VideoFrame {
-  public enum VideoFrameType { YUV420, YUV422, RGBA }
+  public enum VideoFrameType {
+    YUV420(1),
+    YUV422(16),
+    RGBA(4);
+
+    private final int value;
+
+    VideoFrameType(int value) { this.value = value; }
+
+    public int getValue() { return value; }
+  }
 
   private VideoFrameType type;
   private int width;
@@ -19,21 +29,23 @@ public class VideoFrame {
   public VideoFrame(int type, int width, int height, int yStride, int uStride,
                     int vStride, byte[] yBuffer, byte[] uBuffer, byte[] vBuffer,
                     int rotation, long renderTimeMs, int avsync_type) {
-    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for demostration purpose.
-    // If you need more format, please check the value of type of
-    // `VIDEO_PIXEL_FORMAT`(locate in header cpp/android/include/AgoraMediaBase.h)
+    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for
+    // demostration purpose. If you need more format, please check the value of
+    // type of `VIDEO_PIXEL_FORMAT`(locate in header
+    // cpp/android/include/AgoraMediaBase.h)
     switch (type) {
-      case 1: // VIDEO_PIXEL_I420
-        this.type = VideoFrameType.YUV420;
-        break;
-      case 4: // VIDEO_PIXEL_RGBA
-        this.type = VideoFrameType.RGBA;
-        break;
-      case 16: // VIDEO_PIXEL_I422
-        this.type = VideoFrameType.YUV422;
-        break;
-      default:
-        throw new IllegalArgumentException("Only VIDEO_PIXEL_I420/VIDEO_PIXEL_I422/VIDEO_PIXEL_RGBA supported for demostration purpose.");
+    case 1: // VIDEO_PIXEL_I420
+      this.type = VideoFrameType.YUV420;
+      break;
+    case 4: // VIDEO_PIXEL_RGBA
+      this.type = VideoFrameType.RGBA;
+      break;
+    case 16: // VIDEO_PIXEL_I422
+      this.type = VideoFrameType.YUV422;
+      break;
+    default:
+      throw new IllegalArgumentException(
+          "Only VIDEO_PIXEL_I420/VIDEO_PIXEL_I422/VIDEO_PIXEL_RGBA supported for demostration purpose.");
     }
 
     this.width = width;
