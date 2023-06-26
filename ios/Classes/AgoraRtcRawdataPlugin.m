@@ -9,7 +9,7 @@
 #endif
 
 @implementation AgoraRtcRawdataPlugin
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   [SwiftAgoraRtcRawdataPlugin registerWithRegistrar:registrar];
 }
 @end

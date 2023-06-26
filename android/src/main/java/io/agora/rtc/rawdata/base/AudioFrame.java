@@ -1,7 +1,15 @@
 package io.agora.rtc.rawdata.base;
 
 public class AudioFrame {
-  public enum AudioFrameType { PCM16 }
+  public enum AudioFrameType {
+    PCM16(0);
+
+    private final int value;
+
+    AudioFrameType(int value) { this.value = value; }
+
+    public int getValue() { return value; }
+  }
 
   private AudioFrameType type;
   private int samples;

@@ -12,16 +12,20 @@ public:
   virtual ~AudioFrameObserver();
 
 public:
-    bool onRecordAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
-    bool onPlaybackAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
-    bool onMixedAudioFrame(const char* channelId, AudioFrame& audioFrame) override;
-    bool onEarMonitoringAudioFrame(AudioFrame& audioFrame) override;
-    bool onPlaybackAudioFrameBeforeMixing(const char* channelId, rtc::uid_t uid, AudioFrame& audioFrame) override;
-    int getObservedAudioFramePosition() override;
-    AudioParams getPlaybackAudioParams() override;
-    AudioParams getRecordAudioParams() override;
-    AudioParams getMixedAudioParams() override;
-    AudioParams getEarMonitoringAudioParams() override;
+  bool onRecordAudioFrame(const char *channelId,
+                          AudioFrame &audioFrame) override;
+  bool onPlaybackAudioFrame(const char *channelId,
+                            AudioFrame &audioFrame) override;
+  bool onMixedAudioFrame(const char *channelId,
+                         AudioFrame &audioFrame) override;
+  bool onEarMonitoringAudioFrame(AudioFrame &audioFrame) override;
+  bool onPlaybackAudioFrameBeforeMixing(const char *channelId, rtc::uid_t uid,
+                                        AudioFrame &audioFrame) override;
+  int getObservedAudioFramePosition() override;
+  AudioParams getPlaybackAudioParams() override;
+  AudioParams getRecordAudioParams() override;
+  AudioParams getMixedAudioParams() override;
+  AudioParams getEarMonitoringAudioParams() override;
 
 private:
   jbyteArray NativeToJavaByteArray(JNIEnv *env, AudioFrame &audioFrame);

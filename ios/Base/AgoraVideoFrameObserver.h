@@ -13,11 +13,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol AgoraVideoFrameDelegate <NSObject>
 @required
-- (BOOL)onCaptureVideoFrame:(AgoraVideoFrame *_Nonnull)videoFrame;
+- (BOOL)onCaptureVideoFrame:(int)sourceType
+                      frame:(AgoraVideoFrame *_Nonnull)videoFrame;
 - (BOOL)onRenderVideoFrame:(AgoraVideoFrame *_Nonnull)videoFrame
                        uid:(NSUInteger)uid;
 @optional
-- (BOOL)onPreEncodeVideoFrame:(AgoraVideoFrame *_Nonnull)videoFrame;
+- (BOOL)onPreEncodeVideoFrame:(int)sourceType
+                        frame:(AgoraVideoFrame *_Nonnull)videoFrame;
 - (AgoraVideoFrameType)getVideoFormatPreference;
 - (BOOL)getRotationApplied;
 - (BOOL)getMirrorApplied;

@@ -37,7 +37,8 @@ public:
   }
 
 public:
-  bool onCaptureVideoFrame(VideoFrame &videoFrame) override {
+  bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
+                           VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -45,8 +46,9 @@ public:
           (__bridge AgoraVideoFrameObserver *)observer;
       if (observerApple.delegate != nil &&
           [observerApple.delegate
-              respondsToSelector:@selector(onCaptureVideoFrame:)]) {
-        return [observerApple.delegate onCaptureVideoFrame:videoFrameApple];
+              respondsToSelector:@selector(onCaptureVideoFrame:frame:)]) {
+        return [observerApple.delegate onCaptureVideoFrame:type
+                                                     frame:videoFrameApple];
       }
     }
     return true;
@@ -69,7 +71,8 @@ public:
     return true;
   }
 
-  bool onPreEncodeVideoFrame(VideoFrame &videoFrame) override {
+  bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
+                             VideoFrame &videoFrame) override {
     @autoreleasepool {
       AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
@@ -77,12 +80,13 @@ public:
           (__bridge AgoraVideoFrameObserver *)observer;
       if (observerApple.delegate != nil &&
           [observerApple.delegate
-              respondsToSelector:@selector(onPreEncodeVideoFrame:)]) {
-        return [observerApple.delegate onPreEncodeVideoFrame:videoFrameApple];
+              respondsToSelector:@selector(onPreEncodeVideoFrame:frame:)]) {
+        return [observerApple.delegate onPreEncodeVideoFrame:type
+                                                       frame:videoFrameApple];
       }
     }
-      
-      return false;
+
+    return false;
   }
 
   media::base::VIDEO_PIXEL_FORMAT getVideoFormatPreference() override {
@@ -92,8 +96,8 @@ public:
       if (observerApple.delegate != nil &&
           [observerApple.delegate
               respondsToSelector:@selector(getVideoFormatPreference)]) {
-        return (
-                media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate getVideoFormatPreference];
+        return (media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate
+                                                     getVideoFormatPreference];
       }
     }
     return IVideoFrameObserver::getVideoFormatPreference();
@@ -138,54 +142,28 @@ public:
     return IVideoFrameObserver::getObservedFramePosition();
   }
 
-  bool onSecondaryCameraCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+  bool
+  onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
+                          int mediaPlayerId) override {
     return false;
   }
 
-  bool onSecondaryPreEncodeCameraVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
+  bool onTranscodedVideoFrame(
+      media::IVideoFrameObserver::VideoFrame &videoFrame) override {
     return false;
   }
 
-  bool onScreenCaptureVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onMediaPlayerVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame,
-                                                int mediaPlayerId) override {
-    return false;
-  }
-
-  bool onSecondaryScreenCaptureVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onSecondaryPreEncodeScreenVideoFrame(
-            media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  bool onTranscodedVideoFrame(media::IVideoFrameObserver::VideoFrame &videoFrame) override {
-    return false;
-  }
-
-  media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE getVideoFrameProcessMode() override {
-    return IVideoFrameObserver::getVideoFrameProcessMode();
+  media::IVideoFrameObserver::VIDEO_FRAME_PROCESS_MODE
+  getVideoFrameProcessMode() override {
+    return PROCESS_MODE_READ_WRITE;
   }
 
 private:
   AgoraVideoFrame *NativeToAppleVideoFrame(VideoFrame &videoFrame) {
     AgoraVideoFrame *videoFrameApple = [[AgoraVideoFrame alloc] init];
-    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for demostration purpose.
-    // If you need more format, please check the value of type of
-    // `VIDEO_PIXEL_FORMAT`
+    // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for
+    // demostration purpose. If you need more format, please check the value of
+    // type of `VIDEO_PIXEL_FORMAT`
     videoFrameApple.type = (AgoraVideoFrameType)videoFrame.type;
     videoFrameApple.width = videoFrame.width;
     videoFrameApple.height = videoFrame.height;
@@ -205,7 +183,7 @@ private:
   void *observer;
   long long engineHandle;
 };
-}
+} // namespace agora
 
 @interface AgoraVideoFrameObserver ()
 @property(nonatomic) agora::VideoFrameObserver *observer;

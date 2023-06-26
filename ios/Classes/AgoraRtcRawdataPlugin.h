@@ -1,4 +1,4 @@
 #import <Flutter/Flutter.h>
 
-@interface AgoraRtcRawdataPlugin : NSObject<FlutterPlugin>
+@interface AgoraRtcRawdataPlugin : NSObject <FlutterPlugin>
 @end
