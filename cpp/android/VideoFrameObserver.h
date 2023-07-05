@@ -44,7 +44,7 @@ private:
                                                 VideoFrame &videoFrame);
 
   jobject NativeToJavaVideoFrame(JNIEnv *env, VideoFrame &videoFrame,
-                                 std::vector<jbyteArray> jByteArray);
+                                 std::vector<jbyteArray> jByteArray, jfloatArray jMatrix);
 
 private:
   JavaVM *jvm = nullptr;
@@ -60,6 +60,9 @@ private:
 
   jclass jVideoFrameClass;
   jmethodID jVideoFrameInit;
+  jmethodID jVideoFrameGetType;
+  jmethodID jVideoFrameGetTextureId;
+  jmethodID jVideoFrameGetMatrix;
 
   jclass jVideoFrameTypeClass;
   jmethodID jGetValue;

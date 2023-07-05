@@ -30,7 +30,13 @@ VideoFrameObserver::VideoFrameObserver(JNIEnv *env, jobject jCaller,
   jclass jVideoFrame = env->FindClass("io/agora/rtc/rawdata/base/VideoFrame");
   jVideoFrameClass = (jclass)env->NewGlobalRef(jVideoFrame);
   jVideoFrameInit =
-      env->GetMethodID(jVideoFrameClass, "<init>", "(IIIIII[B[B[BIJI)V");
+      env->GetMethodID(jVideoFrameClass, "<init>", "(IIIIII[B[B[BII[FJI)V");
+  jVideoFrameGetType =
+      env->GetMethodID(jVideoFrameClass, "getType", "()I");
+  jVideoFrameGetTextureId =
+      env->GetMethodID(jVideoFrameClass, "getTextureId", "()I");
+  jVideoFrameGetMatrix =
+      env->GetMethodID(jVideoFrameClass, "getTextureMatrix", "()[F");
   env->DeleteLocalRef(jVideoFrame);
 
   jclass videoFrameType =
@@ -74,6 +80,9 @@ VideoFrameObserver::~VideoFrameObserver() {
 
   ats.env()->DeleteGlobalRef(jVideoFrameClass);
   jVideoFrameInit = nullptr;
+  jVideoFrameGetType = nullptr;
+  jVideoFrameGetTextureId = nullptr;
+  jVideoFrameGetMatrix = nullptr;
 
   ats.env()->DeleteGlobalRef(jVideoFrameTypeClass);
   jGetValue = nullptr;
@@ -83,12 +92,21 @@ bool VideoFrameObserver::onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
                                              VideoFrame &videoFrame) {
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
-  std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
-  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
+  std::vector<jbyteArray> j_array;
+  jfloatArray j_matrix = nullptr;
+  if (videoFrame.type == agora::media::base::VIDEO_TEXTURE_OES || videoFrame.type == agora::media::base::VIDEO_TEXTURE_2D) {
+    j_matrix = env->NewFloatArray(16);
+    env->SetFloatArrayRegion(j_matrix, 0, 16,
+                           reinterpret_cast<const jfloat*>(&videoFrame.matrix[0]));
+  } else {
+    j_array = NativeToJavaByteArray(env, videoFrame);
+  }
+
+  jobject obj = NativeToJavaVideoFrame(env, videoFrame, j_array, j_matrix);
   jboolean ret =
       env->CallBooleanMethod(jCallerRef, jOnCaptureVideoFrame, type, obj);
-  for (int i = 0; i < arr.size(); ++i) {
-    jbyteArray jByteArray = arr[i];
+  for (int i = 0; i < j_array.size(); ++i) {
+    jbyteArray jByteArray = j_array[i];
     void *buffer = nullptr;
     if (i == 0) {
       buffer = videoFrame.yBuffer;
@@ -101,6 +119,23 @@ bool VideoFrameObserver::onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
                             static_cast<jbyte *>(buffer));
     env->DeleteLocalRef(jByteArray);
   }
+  if (j_matrix) {
+    jfloat* j_float = env->GetFloatArrayElements(j_matrix, nullptr);
+    env->ReleaseFloatArrayElements(j_matrix, j_float, 0);
+    env->DeleteLocalRef(j_matrix);
+  }
+
+  jint new_type = env->CallIntMethod(obj, jVideoFrameGetType);
+  if (new_type == agora::media::base::VIDEO_TEXTURE_OES || new_type == agora::media::base::VIDEO_TEXTURE_2D) {
+      videoFrame.type = static_cast<agora::media::base::VIDEO_PIXEL_FORMAT>(new_type);
+      videoFrame.textureId = env->CallIntMethod(obj, jVideoFrameGetTextureId);
+      jfloatArray new_matrix = static_cast<jfloatArray>(env->CallObjectMethod(obj, jVideoFrameGetMatrix));
+      jfloat* new_float = env->GetFloatArrayElements(new_matrix, nullptr);
+      memcpy(videoFrame.matrix, new_float, sizeof(videoFrame.matrix));
+      env->ReleaseFloatArrayElements(new_matrix, new_float, 0);
+      env->DeleteLocalRef(new_matrix);
+  }
+
   env->DeleteLocalRef(obj);
   return ret;
 }
@@ -111,7 +146,7 @@ bool VideoFrameObserver::onRenderVideoFrame(const char *channelId,
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
-  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
+  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr, nullptr);
   jboolean ret =
       env->CallBooleanMethod(jCallerRef, jOnRenderVideoFrame, remoteUid, obj);
   for (int i = 0; i < arr.size(); ++i) {
@@ -137,7 +172,7 @@ bool VideoFrameObserver::onPreEncodeVideoFrame(
   AttachThreadScoped ats(jvm);
   JNIEnv *env = ats.env();
   std::vector<jbyteArray> arr = NativeToJavaByteArray(env, videoFrame);
-  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr);
+  jobject obj = NativeToJavaVideoFrame(env, videoFrame, arr, nullptr);
   jboolean ret =
       env->CallBooleanMethod(jCallerRef, jOnPreEncodeVideoFrame, type, obj);
   for (int i = 0; i < arr.size(); ++i) {
@@ -241,14 +276,20 @@ VideoFrameObserver::NativeToJavaByteArray(JNIEnv *env, VideoFrame &videoFrame) {
 
 jobject VideoFrameObserver::NativeToJavaVideoFrame(
     JNIEnv *env, media::IVideoFrameObserver::VideoFrame &videoFrame,
-    std::vector<jbyteArray> jByteArray) {
-  jbyteArray jYArray = jByteArray[0];
-  jbyteArray jUArray = jByteArray[1];
-  jbyteArray jVArray = jByteArray[2];
-  return env->NewObject(jVideoFrameClass, jVideoFrameInit, (int)videoFrame.type,
+    std::vector<jbyteArray> jByteArray, jfloatArray jMatrix) {
+    jbyteArray jYArray = nullptr;
+    jbyteArray jUArray = nullptr;
+    jbyteArray jVArray = nullptr;
+    if (jByteArray.size() == 3) {
+        jYArray = jByteArray[0];
+        jUArray = jByteArray[1];
+        jVArray = jByteArray[2];
+    }
+    return env->NewObject(jVideoFrameClass, jVideoFrameInit, (int)videoFrame.type,
                         videoFrame.width, videoFrame.height, videoFrame.yStride,
                         videoFrame.uStride, videoFrame.vStride, jYArray,
                         jUArray, jVArray, videoFrame.rotation,
+                        videoFrame.textureId, jMatrix,
                         videoFrame.renderTimeMs, videoFrame.avsync_type);
 }
 

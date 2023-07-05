@@ -50,5 +50,7 @@ android {
 }
 
 dependencies {
+//    compileOnly files('libs/agora-rtc-sdk.jar')
+    compileOnly 'io.agora.rtc:full-sdk:4.2.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

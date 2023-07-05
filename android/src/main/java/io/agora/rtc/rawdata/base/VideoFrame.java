@@ -4,7 +4,9 @@ public class VideoFrame {
   public enum VideoFrameType {
     YUV420(1),
     YUV422(16),
-    RGBA(4);
+    RGBA(4),
+    TEXTURE_2D(10),
+    TEXTURE_OES(11);
 
     private final int value;
 
@@ -23,12 +25,15 @@ public class VideoFrame {
   private byte[] uBuffer;
   private byte[] vBuffer;
   private int rotation;
+  private int textureId;
+  private float[] textureMatrix;
   private long renderTimeMs;
   private int avsync_type;
 
   public VideoFrame(int type, int width, int height, int yStride, int uStride,
                     int vStride, byte[] yBuffer, byte[] uBuffer, byte[] vBuffer,
-                    int rotation, long renderTimeMs, int avsync_type) {
+                    int rotation, int textureId, float[] matrix,
+                    long renderTimeMs, int avsync_type) {
     // Only support VIDEO_PIXEL_I420/VIDEO_PIXEL_RGBA/VIDEO_PIXEL_I422 for
     // demostration purpose. If you need more format, please check the value of
     // type of `VIDEO_PIXEL_FORMAT`(locate in header
@@ -43,9 +48,15 @@ public class VideoFrame {
     case 16: // VIDEO_PIXEL_I422
       this.type = VideoFrameType.YUV422;
       break;
+    case 10:
+      this.type = VideoFrameType.TEXTURE_2D;
+      break;
+    case 11:
+      this.type = VideoFrameType.TEXTURE_OES;
+      break;
     default:
       throw new IllegalArgumentException(
-          "Only VIDEO_PIXEL_I420/VIDEO_PIXEL_I422/VIDEO_PIXEL_RGBA supported for demostration purpose.");
+          "Only VIDEO_PIXEL_I420/VIDEO_PIXEL_I422/VIDEO_PIXEL_RGBA/Texture supported for demostration purpose.");
     }
 
     this.width = width;
@@ -57,13 +68,15 @@ public class VideoFrame {
     this.uBuffer = uBuffer;
     this.vBuffer = vBuffer;
     this.rotation = rotation;
+    this.textureId = textureId;
+    this.textureMatrix = matrix;
     this.renderTimeMs = renderTimeMs;
     this.avsync_type = avsync_type;
   }
 
-  public VideoFrameType getType() { return type; }
+  public int getType() { return type.getValue(); }
 
-  public void setType(int type) { this.type = VideoFrameType.values()[type]; }
+  public void setType(VideoFrameType type) { this.type = type; }
 
   public int getWidth() { return width; }
 
@@ -100,6 +113,14 @@ public class VideoFrame {
   public int getRotation() { return rotation; }
 
   public void setRotation(int rotation) { this.rotation = rotation; }
+
+  public int getTextureId() { return textureId; }
+
+  public void setTextureId(int textureId) { this.textureId = textureId; }
+
+  public float[] getTextureMatrix() { return textureMatrix; }
+
+  public void setTextureMatrix(float[] matrix) { this.textureMatrix = matrix; }
 
   public long getRenderTimeMs() { return renderTimeMs; }
 
