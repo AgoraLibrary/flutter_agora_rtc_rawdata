@@ -11,12 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v4
         with:
-          java-version: '11'
-      - uses: subosito/flutter-action@v1
+          distribution: 'zulu'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          channel: 'stable'
+          flutter-version: '3.24.5'
       - run: flutter pub get
       - name: Run flutter build apk
         run: flutter build apk
@@ -28,9 +30,10 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v1
-      - uses: subosito/flutter-action@v1
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          channel: 'stable'
+          flutter-version: '3.24.5'
       - run: flutter pub get
       - name: Run flutter build ios --no-codesign
         run: flutter build ios --no-codesign
