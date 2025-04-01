@@ -14,7 +14,8 @@ namespace agora {
 class AudioFrameObserver : public media::IAudioFrameObserver {
 public:
   AudioFrameObserver(long long engineHandle, void *observer)
-      : engineHandle(engineHandle), observer(observer) {
+      : engineHandle(engineHandle),
+        observer((__bridge AgoraAudioFrameObserver *)observer) {
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
@@ -40,14 +41,16 @@ public:
   bool onRecordAudioFrame(const char *channelId,
                           AudioFrame &audioFrame) override {
     @autoreleasepool {
-      AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
+      AgoraAudioFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onRecordAudioFrame:)]) {
-        return [observerApple.delegate onRecordAudioFrame:audioFrameApple];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onRecordAudioFrame:)]) {
+          return
+              [strongObserverApple.delegate onRecordAudioFrame:audioFrameApple];
+        }
       }
     }
     return true;
@@ -56,14 +59,16 @@ public:
   bool onPlaybackAudioFrame(const char *channelId,
                             AudioFrame &audioFrame) override {
     @autoreleasepool {
-      AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
+      AgoraAudioFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onPlaybackAudioFrame:)]) {
-        return [observerApple.delegate onPlaybackAudioFrame:audioFrameApple];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onPlaybackAudioFrame:)]) {
+          return [strongObserverApple.delegate
+              onPlaybackAudioFrame:audioFrameApple];
+        }
       }
     }
     return true;
@@ -72,14 +77,16 @@ public:
   bool onMixedAudioFrame(const char *channelId,
                          AudioFrame &audioFrame) override {
     @autoreleasepool {
-      AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
+      AgoraAudioFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onMixedAudioFrame:)]) {
-        return [observerApple.delegate onMixedAudioFrame:audioFrameApple];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onMixedAudioFrame:)]) {
+          return
+              [strongObserverApple.delegate onMixedAudioFrame:audioFrameApple];
+        }
       }
     }
     return true;
@@ -88,16 +95,18 @@ public:
   bool onPlaybackAudioFrameBeforeMixing(const char *channelId, rtc::uid_t uid,
                                         AudioFrame &audioFrame) override {
     @autoreleasepool {
-      AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
+      AgoraAudioFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraAudioFrame *audioFrameApple = NativeToAppleAudioFrame(audioFrame);
 
-      AgoraAudioFrameObserver *observerApple =
-          (__bridge AgoraAudioFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate respondsToSelector:@selector
-                                  (onPlaybackAudioFrameBeforeMixing:uid:)]) {
-        return [observerApple.delegate
-            onPlaybackAudioFrameBeforeMixing:audioFrameApple
-                                         uid:uid];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector
+                (onPlaybackAudioFrameBeforeMixing:uid:)]) {
+          return [strongObserverApple.delegate
+              onPlaybackAudioFrameBeforeMixing:audioFrameApple
+                                           uid:uid];
+        }
       }
     }
     return true;
@@ -143,7 +152,7 @@ private:
   }
 
 private:
-  void *observer;
+  __weak AgoraAudioFrameObserver *observer;
   long long engineHandle;
 };
 } // namespace agora

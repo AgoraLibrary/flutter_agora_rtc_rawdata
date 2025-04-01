@@ -14,7 +14,8 @@ namespace agora {
 class VideoFrameObserver : public media::IVideoFrameObserver {
 public:
   VideoFrameObserver(long long engineHandle, void *observer)
-      : engineHandle(engineHandle), observer(observer) {
+      : engineHandle(engineHandle),
+        observer((__bridge AgoraVideoFrameObserver *)observer) {
     auto rtcEngine = reinterpret_cast<rtc::IRtcEngine *>(engineHandle);
     if (rtcEngine) {
       util::AutoPtr<media::IMediaEngine> mediaEngine;
@@ -40,15 +41,17 @@ public:
   bool onCaptureVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
                            VideoFrame &videoFrame) override {
     @autoreleasepool {
-      AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onCaptureVideoFrame:frame:)]) {
-        return [observerApple.delegate onCaptureVideoFrame:type
-                                                     frame:videoFrameApple];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onCaptureVideoFrame:frame:)]) {
+          return [strongObserverApple.delegate
+              onCaptureVideoFrame:type
+                            frame:videoFrameApple];
+        }
       }
     }
     return true;
@@ -57,15 +60,17 @@ public:
   bool onRenderVideoFrame(const char *channelId, rtc::uid_t remoteUid,
                           VideoFrame &videoFrame) override {
     @autoreleasepool {
-      AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onRenderVideoFrame:uid:)]) {
-        return [observerApple.delegate onRenderVideoFrame:videoFrameApple
-                                                      uid:remoteUid];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onRenderVideoFrame:uid:)]) {
+          return
+              [strongObserverApple.delegate onRenderVideoFrame:videoFrameApple
+                                                           uid:remoteUid];
+        }
       }
     }
     return true;
@@ -74,15 +79,17 @@ public:
   bool onPreEncodeVideoFrame(agora::rtc::VIDEO_SOURCE_TYPE type,
                              VideoFrame &videoFrame) override {
     @autoreleasepool {
-      AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        AgoraVideoFrame *videoFrameApple = NativeToAppleVideoFrame(videoFrame);
 
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(onPreEncodeVideoFrame:frame:)]) {
-        return [observerApple.delegate onPreEncodeVideoFrame:type
-                                                       frame:videoFrameApple];
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(onPreEncodeVideoFrame:frame:)]) {
+          return [strongObserverApple.delegate
+              onPreEncodeVideoFrame:type
+                              frame:videoFrameApple];
+        }
       }
     }
 
@@ -91,13 +98,15 @@ public:
 
   media::base::VIDEO_PIXEL_FORMAT getVideoFormatPreference() override {
     @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(getVideoFormatPreference)]) {
-        return (media::base::VIDEO_PIXEL_FORMAT)[observerApple.delegate
-                                                     getVideoFormatPreference];
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(getVideoFormatPreference)]) {
+          return (
+              media::base::VIDEO_PIXEL_FORMAT)[strongObserverApple.delegate
+                                                   getVideoFormatPreference];
+        }
       }
     }
     return IVideoFrameObserver::getVideoFormatPreference();
@@ -105,12 +114,13 @@ public:
 
   bool getRotationApplied() override {
     @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(getRotationApplied)]) {
-        return [observerApple.delegate getRotationApplied];
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(getRotationApplied)]) {
+          return [strongObserverApple.delegate getRotationApplied];
+        }
       }
     }
     return IVideoFrameObserver::getRotationApplied();
@@ -118,12 +128,13 @@ public:
 
   bool getMirrorApplied() override {
     @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(getMirrorApplied)]) {
-        return [observerApple.delegate getMirrorApplied];
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(getMirrorApplied)]) {
+          return [strongObserverApple.delegate getMirrorApplied];
+        }
       }
     }
     return IVideoFrameObserver::getMirrorApplied();
@@ -131,12 +142,13 @@ public:
 
   uint32_t getObservedFramePosition() override {
     @autoreleasepool {
-      AgoraVideoFrameObserver *observerApple =
-          (__bridge AgoraVideoFrameObserver *)observer;
-      if (observerApple.delegate != nil &&
-          [observerApple.delegate
-              respondsToSelector:@selector(getObservedFramePosition)]) {
-        return [observerApple.delegate getObservedFramePosition];
+      AgoraVideoFrameObserver *strongObserverApple = observer;
+      if (strongObserverApple) {
+        if (strongObserverApple.delegate != nil &&
+            [strongObserverApple.delegate
+                respondsToSelector:@selector(getObservedFramePosition)]) {
+          return [strongObserverApple.delegate getObservedFramePosition];
+        }
       }
     }
     return IVideoFrameObserver::getObservedFramePosition();
@@ -180,13 +192,13 @@ private:
   }
 
 private:
-  void *observer;
+  __weak AgoraVideoFrameObserver *observer;
   long long engineHandle;
 };
 } // namespace agora
 
 @interface AgoraVideoFrameObserver ()
-@property(nonatomic) agora::VideoFrameObserver *observer;
+@property(nonatomic, assign) agora::VideoFrameObserver *observer;
 @end
 
 @implementation AgoraVideoFrameObserver
