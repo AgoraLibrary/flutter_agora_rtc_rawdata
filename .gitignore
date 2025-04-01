@@ -57,3 +57,6 @@ android/.cxx
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
 android/gradle/wrapper/gradle-wrapper.properties
+
+# FVM Version Cache
+.fvm/

@@ -50,17 +50,6 @@ public:
   virtual int open(const char* url, int64_t startPos) = 0;
 
   /**
-   * @deprecated
-   * @brief Open media file or stream with custom soucrce.
-   * @param startPos Set the starting position for playback, in seconds
-   * @param observer dataProvider object
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int openWithCustomSource(int64_t startPos,  media::base::IMediaPlayerCustomDataProvider* provider) = 0;
-
-  /**
    * @brief Open a media file with a media file source.
    * @param source Media file source that you want to play, see `MediaSource`
    * @return
@@ -176,7 +165,7 @@ public:
    *
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    * - -2: Invalid argument. Argument must be greater than or equal to zero.
    * - -8: Invalid State.You must open the media file with openWithMediaSource and set enableMultiAudioTrack to true
    */
@@ -234,7 +223,7 @@ public:
    * @brief Turn mute on or off
    *
    * @param muted Whether to mute on
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int mute(bool muted) = 0;
 
@@ -242,7 +231,7 @@ public:
    * @brief Get mute state
    *
    * @param[out] muted Whether is mute on
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int getMute(bool& muted) = 0;
 
@@ -254,7 +243,7 @@ public:
    * 0: mute;
    * 100: original volume;
    * 400: Up to 4 times the original volume (with built-in overflow protection).
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int adjustPlayoutVolume(int volume) = 0;
 
@@ -262,21 +251,21 @@ public:
    * @brief Get the current playback volume
    *
    * @param[out] volume
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int getPlayoutVolume(int& volume) = 0;
 
   /**
    * @brief adjust publish signal volume
    *
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int adjustPublishSignalVolume(int volume) = 0;
 
   /**
    * @brief get publish signal volume
    *
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int getPublishSignalVolume(int& volume) = 0;
 
@@ -284,7 +273,7 @@ public:
    * @brief Set video rendering view
    *
    * @param view view object, windows platform is HWND
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int setView(media::base::view_t view) = 0;
 
@@ -292,7 +281,7 @@ public:
    * @brief Set video display mode
    *
    * @param renderMode Video display mode
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int setRenderMode(media::base::RENDER_MODE_TYPE renderMode) = 0;
 
@@ -324,21 +313,21 @@ public:
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int registerAudioFrameObserver(media::base::IAudioFrameObserver* observer) = 0;
+  virtual int registerAudioFrameObserver(media::IAudioPcmFrameSink* observer) = 0;
 
   /**
    * Registers an audio observer.
    *
    * @param observer The audio observer, reporting the reception of each audio
    * frame. See
-   * \ref media::base::IAudioFrameObserver "IAudioFrameObserver" for
+   * \ref media::IAudioPcmFrameSink "IAudioFrameObserver" for
    * details.
    * @param mode Use mode of the audio frame. See #RAW_AUDIO_FRAME_OP_MODE_TYPE.
    * @return
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int registerAudioFrameObserver(media::base::IAudioFrameObserver* observer,
+  virtual int registerAudioFrameObserver(media::IAudioPcmFrameSink* observer,
                                          RAW_AUDIO_FRAME_OP_MODE_TYPE mode) = 0;
 
   /**
@@ -348,13 +337,13 @@ public:
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int unregisterAudioFrameObserver(media::base::IAudioFrameObserver* observer) = 0;
+  virtual int unregisterAudioFrameObserver(media::IAudioPcmFrameSink* observer) = 0;
 
   /**
    * @brief Register the player video observer
    *
    * @param observer observer object
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int registerVideoFrameObserver(media::base::IVideoFrameObserver* observer) = 0;
 
@@ -362,7 +351,7 @@ public:
    * @brief UnRegister the player video observer
    *
    * @param observer observer object
-   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_ERROR
+   * @return int < 0 on behalf of an error, the value corresponds to one of MEDIA_PLAYER_REASON
    */
   virtual int unregisterVideoFrameObserver(agora::media::base::IVideoFrameObserver* observer) = 0;
 
@@ -398,6 +387,8 @@ public:
   /**
     * get sdk version and build number of player SDK.
     * @return String of the SDK version.
+    * 
+    * @deprecated This method is deprecated.
    */
   virtual const char* getPlayerSdkVersion() = 0;
 
@@ -537,18 +528,6 @@ public:
    * - < 0: Failure.
    */
   virtual int setSoundPositionParams(float pan, float gain) = 0;
-
-  /**
-   * Set delay of playback to local device.
-   *
-   *@param delay_ms The delay_ms for playback to local device:
-   * - for default, the pipeline default is 160ms, 16 buffer before pipeline start consuming
-   * - for playeffect, it need to play as soon as possible for short file, sugguest to used 50ms
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int setAudioPlaybackDelay(int delay_ms) = 0;
 
 };
 

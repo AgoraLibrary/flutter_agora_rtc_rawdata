@@ -42,17 +42,6 @@ public:
    * - < 0: Failure.
    */
   virtual int open(const char* url, int64_t startPos) = 0;
-    
-  /**
-   * @deprecated
-   * @brief Open media file or stream with custom soucrce.
-   * @param startPos Set the starting position for playback, in seconds
-   * @param observer dataProvider object
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int openWithCustomSource(int64_t startPos, media::base::IMediaPlayerCustomDataProvider* provider) = 0;
 
   /**
    * Opens a media file with a media file source.
@@ -118,7 +107,7 @@ public:
    * @param [out] pos A reference to the current playback position (ms).
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int getPlayPosition(int64_t& pos) = 0;
 
@@ -127,7 +116,7 @@ public:
    * @param [out] count The number of the media streams in the media source.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int getStreamCount(int64_t& count) = 0;
 
@@ -137,7 +126,7 @@ public:
    * @param [out] info The detailed information of the media stream. See \ref media::base::PlayerStreamInfo "PlayerStreamInfo" for details.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int getStreamInfo(int64_t index, media::base::PlayerStreamInfo* info) = 0;
 
@@ -149,7 +138,7 @@ public:
    * - -1: Play the media file in a loop indefinitely, until {@link stop} is called.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int setLoopCount(int64_t loopCount) = 0;
 
@@ -158,7 +147,7 @@ public:
    * @param speed The playback speed ref [50-400].
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int setPlaybackSpeed(int speed) = 0;
 
@@ -167,7 +156,7 @@ public:
    * @param index The index of the audio track in media file.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int selectAudioTrack(int64_t index) = 0;
 
@@ -182,7 +171,7 @@ public:
    *
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    * - -2: Invalid argument. Argument must be greater than or equal to zero.
    * - -8: Invalid State.You must open the media file with openWithMediaSource and set enableMultiAudioTrack to true
    */
@@ -194,7 +183,7 @@ public:
    * @param value The value of option parameter.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int setPlayerOption(const char* key, int64_t value) = 0;
 
@@ -204,7 +193,7 @@ public:
    * @param value The value of option parameter.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int setPlayerOption(const char* key, const char* value) = 0;
 
@@ -213,7 +202,7 @@ public:
    * @param filename The filename of the screenshot file.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int takeScreenshot(const char* filename) = 0;
 
@@ -222,7 +211,7 @@ public:
    * @param index The index of the internal subtitles.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int selectInternalSubtitle(int64_t index) = 0;
 
@@ -231,7 +220,7 @@ public:
    * @param url The URL of the subtitle file.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int setExternalSubtitle(const char* url) = 0;
 
@@ -248,7 +237,7 @@ public:
    * @param observer The pointer to the IMediaPlayerSourceObserver object.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int registerPlayerSourceObserver(IMediaPlayerSourceObserver* observer) = 0;
 
@@ -257,28 +246,28 @@ public:
    * @param observer The pointer to the IMediaPlayerSourceObserver object.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual int unregisterPlayerSourceObserver(IMediaPlayerSourceObserver* observer) = 0;
 
   /**
    * Registers the audio frame observer.
    *
-   * @param observer The pointer to the {@link media::base::IAudioFrameObserver IAudioFrameObserver} object.
+   * @param observer The pointer to the {@link media::IAudioPcmFrameSink observer} object.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
-  virtual int registerAudioFrameObserver(media::base::IAudioFrameObserver* observer) = 0;
+  virtual int registerAudioFrameObserver(media::IAudioPcmFrameSink* observer) = 0;
 
   /**
    * Releases the audio frame observer.
-   * @param observer The pointer to the {@link media::base::IAudioFrameObserver IAudioFrameObserver} object.
+   * @param observer The pointer to the {@link media::IAudioPcmFrameSink observer} object.
    * @return
    * - 0: Success.
-   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * - < 0: Failure. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
-  virtual int unregisterAudioFrameObserver(media::base::IAudioFrameObserver* observer) = 0;
+  virtual int unregisterAudioFrameObserver(media::IAudioPcmFrameSink* observer) = 0;
 
   /**
    * Open the Agora CDN media source.
@@ -397,19 +386,19 @@ class IMediaPlayerSourceObserver {
    *
    * When the state of the playback changes, the SDK triggers this callback to report the new playback state and the reason or error for the change.
    * @param state The new playback state after change. See {@link media::base::MEDIA_PLAYER_STATE MEDIA_PLAYER_STATE}.
-   * @param ec The player's error code. See {@link media::base::MEDIA_PLAYER_ERROR MEDIA_PLAYER_ERROR}.
+   * @param reason The player's error code. See {@link media::base::MEDIA_PLAYER_REASON MEDIA_PLAYER_REASON}.
    */
   virtual void onPlayerSourceStateChanged(media::base::MEDIA_PLAYER_STATE state,
-                                          media::base::MEDIA_PLAYER_ERROR ec) = 0;
+                                          media::base::MEDIA_PLAYER_REASON reason) = 0;
 
   /**
    * @brief Reports current playback progress.
    *
    * The callback occurs once every one second during the playback and reports the current playback progress.
-   * @param position Current playback progress (milisecond).
-   * @param timestamp Current NTP(Network Time Protocol) time (milisecond).
+   * @param positionMs Current playback progress (milisecond).
+   * @param timestampMs Current NTP(Network Time Protocol) time (milisecond).
    */
-  virtual void onPositionChanged(int64_t position_ms, int64_t timestamp_ms) = 0;
+  virtual void onPositionChanged(int64_t positionMs, int64_t timestampMs) = 0;
 
   /**
    * @brief Reports the playback event.
@@ -473,6 +462,24 @@ class IMediaPlayerSourceObserver {
    * @param info Include information of media player.
    */
   virtual void onPlayerInfoUpdated(const media::base::PlayerUpdatedInfo& info) = 0;
+
+   /**
+   * @brief Triggered every 1 second, reports the statistics of the files being cached.
+   * 
+   * @param stats Cached file statistics.
+   */
+  virtual void onPlayerCacheStats(const media::base::CacheStatistics& stats) {
+    (void)stats;
+  }
+
+   /**
+   * @brief Triggered every 1 second, reports the statistics of the media stream being played.
+   * 
+   * @param stats The statistics of the media stream.
+   */
+  virtual void onPlayerPlaybackStats(const media::base::PlayerPlaybackStats& stats) {
+    (void)stats;
+  }
   
   /**
    * @brief Triggered  every 200 millisecond ,update player current volume range [0,255]

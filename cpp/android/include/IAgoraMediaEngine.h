@@ -58,7 +58,6 @@ class IMediaEngine {
    * - < 0: Failure.
    */
   virtual int registerVideoFrameObserver(IVideoFrameObserver* observer) = 0;
-
   /**
    * Registers a receiver object for the encoded video image.
    *
@@ -73,7 +72,21 @@ class IMediaEngine {
    * - < 0: Failure.
    */
   virtual int registerVideoEncodedFrameObserver(IVideoEncodedFrameObserver* observer) = 0;
-
+  
+  /**
+   * Registers a face info observer object.
+   *
+   * @note
+   * Ensure that you call this method before \ref IRtcEngine::joinChannel "joinChannel".
+   *
+   * @param observer A pointer to the face info observer object: IFaceInfoObserver.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int registerFaceInfoObserver(IFaceInfoObserver* observer) = 0;
+  
   /**
    * Pushes the external audio data to the app.
    *
@@ -83,11 +96,8 @@ class IMediaEngine {
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int pushAudioFrame(IAudioFrameObserver::AudioFrame* frame, rtc::track_id_t trackId = 0) = 0;
-  
-  virtual int pushCaptureAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
-
-  virtual int pushReverseAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
+   
+  virtual int pushAudioFrame(IAudioFrameObserverBase::AudioFrame* frame, rtc::track_id_t trackId = 0) = 0;
 
   /**
    * Pulls the remote audio data.
@@ -105,7 +115,7 @@ class IMediaEngine {
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int pullAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
+  virtual int pullAudioFrame(IAudioFrameObserverBase::AudioFrame* frame) = 0;
 
   /**
    * Sets the external video source.
@@ -130,6 +140,24 @@ class IMediaEngine {
   virtual int setExternalVideoSource(
       bool enabled, bool useTexture, EXTERNAL_VIDEO_SOURCE_TYPE sourceType = VIDEO_FRAME,
       rtc::SenderOptions encodedVideoOption = rtc::SenderOptions()) = 0;
+
+#if defined(__ANDROID__)
+  /**
+   * Sets the remote eglContext.
+   *
+   * When the engine is destroyed, the SDK will automatically release the eglContext.
+   *
+   * @param eglContext.
+   *
+   * @note
+   * setExternalRemoteEglContext needs to be called before joining the channel.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setExternalRemoteEglContext(void* eglContext) = 0;
+#endif
 
   /**
    * Sets the external audio source.
@@ -157,7 +185,7 @@ class IMediaEngine {
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int setExternalAudioSource(bool enabled, int sampleRate, int channels, bool localPlayback = false, bool publish = true) = 0;
+  virtual int setExternalAudioSource(bool enabled, int sampleRate, int channels, bool localPlayback = false, bool publish = true) __deprecated = 0;
 
   /**
    * Create a custom audio track and get the audio track id.
@@ -241,7 +269,6 @@ class IMediaEngine {
    * - < 0: Failure.
    */
   virtual int pushVideoFrame(base::ExternalVideoFrame* frame, unsigned int videoTrackId = 0) = 0;
-
   /**
    * Pushes the encoded video image to the app.
    * @param imageBuffer A pointer to the video image.
@@ -252,9 +279,18 @@ class IMediaEngine {
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int pushEncodedVideoImage(const uint8_t* imageBuffer, size_t length,
+  virtual int pushEncodedVideoImage(const unsigned char* imageBuffer, size_t length,
                                     const agora::rtc::EncodedVideoFrameInfo& videoEncodedFrameInfo,
                                     unsigned int videoTrackId = 0) = 0;
+  /**
+   * @hide For internal usage only
+   */
+  virtual int addVideoFrameRenderer(IVideoFrameObserver *renderer) = 0;
+
+  /**
+   * @hide For internal usage only
+   */
+  virtual int removeVideoFrameRenderer(IVideoFrameObserver *renderer) = 0;
 
   virtual void release() = 0;
 
