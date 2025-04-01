@@ -50,7 +50,6 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   using IRtcEngineEventHandler::onRtcStats;
   using IRtcEngineEventHandler::onNetworkQuality;
   using IRtcEngineEventHandler::onIntraRequestReceived;
-  using IRtcEngineEventHandler::onFirstLocalVideoFrame;
   using IRtcEngineEventHandler::onFirstLocalVideoFramePublished;
   using IRtcEngineEventHandler::onFirstRemoteVideoDecoded;
   using IRtcEngineEventHandler::onVideoSizeChanged;
@@ -92,6 +91,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   using IRtcEngineEventHandler::onNetworkTypeChanged;
   using IRtcEngineEventHandler::onEncryptionError;
   using IRtcEngineEventHandler::onUploadLogResult;
+  using IRtcEngineEventHandler::onUserInfoUpdated;
   using IRtcEngineEventHandler::onUserAccountUpdated;
   using IRtcEngineEventHandler::onAudioSubscribeStateChanged;
   using IRtcEngineEventHandler::onVideoSubscribeStateChanged;
@@ -99,6 +99,9 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   using IRtcEngineEventHandler::onVideoPublishStateChanged;
   using IRtcEngineEventHandler::onSnapshotTaken;
   using IRtcEngineEventHandler::onVideoRenderingTracingResult;
+  using IRtcEngineEventHandler::onSetRtmFlagResult;
+  using IRtcEngineEventHandler::onTranscodedStreamLayoutInfo;
+  using IRtcEngineEventHandler::onAudioMetadataReceived;
 
   virtual const char* eventHandlerType() const { return "event_handler_ex"; }
 
@@ -145,7 +148,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   @param delay The network delay (ms) from the sender to the receiver, including the delay caused by audio sampling pre-processing, network transmission, and network jitter buffering.
   @param lost The audio packet loss rate (%) from the sender to the receiver.
   */
-  virtual void onAudioQuality(const RtcConnection& connection, uid_t remoteUid, int quality, unsigned short delay, unsigned short lost) {
+  virtual void onAudioQuality(const RtcConnection& connection, uid_t remoteUid, int quality, unsigned short delay, unsigned short lost) __deprecated {
     (void)connection;
     (void)remoteUid;
     (void)quality;
@@ -255,23 +258,6 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
     (void)connection;
   }
 
-  /**
-   * Occurs when the first local video frame is displayed on the video window.
-   *
-   * @deprecated 4.0.0 This callback is deprecated, use void onFirstLocalVideoFrame(VIDEO_SOURCE_TYPE source, int width, int height, int elapsed) instead.
-   *
-   * @param connection The RtcConnection object.
-   * @param width The width (pixels) of the video stream.
-   * @param height The height (pixels) of the video stream.
-   * @param elapsed The time elapsed (ms) from the local user calling \ref IRtcEngine::joinChannel "joinChannel" until this callback is triggered.
-   */
-  virtual void onFirstLocalVideoFrame(const RtcConnection& connection, int width, int height, int elapsed) {
-    (void)connection;
-    (void)width;
-    (void)height;
-    (void)elapsed;
-  }
-
   /** Occurs when the first local video frame is published.
    * The SDK triggers this callback under one of the following circumstances:
    * - The local client enables the video module and calls `joinChannel` successfully.
@@ -325,43 +311,11 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    */
   virtual void onVideoSizeChanged(const RtcConnection& connection, VIDEO_SOURCE_TYPE sourceType, uid_t uid, int width, int height, int rotation) {
     (void)connection;
+    (void)sourceType;
     (void)uid;
     (void)width;
     (void)height;
     (void)rotation;
-  }
-  /** Occurs when the local video stream state changes.
-   *
-   * When the state of the local video stream changes (including the state of the video capture and
-   * encoding), the SDK triggers this callback to report the current state. This callback indicates
-   * the state of the local video stream, including camera capturing and video encoding, and allows
-   * you to troubleshoot issues when exceptions occur.
-   *
-   * The SDK triggers the onLocalVideoStateChanged callback with the state code of `LOCAL_VIDEO_STREAM_STATE_FAILED`
-   * and error code of `LOCAL_VIDEO_STREAM_ERROR_CAPTURE_FAILURE` in the following situations:
-   * - The app switches to the background, and the system gets the camera resource.
-   * - The camera starts normally, but does not output video for four consecutive seconds.
-   *
-   * When the camera outputs the captured video frames, if the video frames are the same for 15
-   * consecutive frames, the SDK triggers the `onLocalVideoStateChanged` callback with the state code
-   * of `LOCAL_VIDEO_STREAM_STATE_CAPTURING` and error code of `LOCAL_VIDEO_STREAM_ERROR_CAPTURE_FAILURE`.
-   * Note that the video frame duplication detection is only available for video frames with a resolution
-   * greater than 200 × 200, a frame rate greater than or equal to 10 fps, and a bitrate less than 20 Kbps.
-   *
-   * @note For some device models, the SDK does not trigger this callback when the state of the local
-   * video changes while the local video capturing device is in use, so you have to make your own
-   * timeout judgment.
-   *
-   * @param connection The RtcConnection object.
-   * @param state The state of the local video. See #LOCAL_VIDEO_STREAM_STATE.
-   * @param error The detailed error information. See #LOCAL_VIDEO_STREAM_ERROR.
-   */
-  virtual void onLocalVideoStateChanged(const RtcConnection& connection,
-                                        LOCAL_VIDEO_STREAM_STATE state,
-                                        LOCAL_VIDEO_STREAM_ERROR errorCode) {
-    (void)connection;
-    (void)state;
-    (void)errorCode;
   }
 
   /**
@@ -498,7 +452,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   - true: The remote user has enabled video.
   - false: The remote user has disabled video.
   */
- virtual void onUserEnableVideo(const RtcConnection& connection, uid_t remoteUid, bool enabled) __deprecated {
+ virtual void onUserEnableVideo(const RtcConnection& connection, uid_t remoteUid, bool enabled) {
     (void)connection;
     (void)remoteUid;
     (void)enabled;
@@ -618,7 +572,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   @param connection The RtcConnection object.
 
   */
-  virtual void onConnectionInterrupted(const RtcConnection& connection) {
+  virtual void onConnectionInterrupted(const RtcConnection& connection) __deprecated {
     (void)connection;
   }
 
@@ -737,7 +691,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    * @param elapsed The time elapsed (ms) from the loca user calling `joinChannel`
    * until this callback is triggered.
    */
-  virtual void onFirstRemoteAudioFrame(const RtcConnection& connection, uid_t userId, int elapsed) {
+  virtual void onFirstRemoteAudioFrame(const RtcConnection& connection, uid_t userId, int elapsed) __deprecated {
     (void)connection;
     (void)userId;
     (void)elapsed;
@@ -760,7 +714,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    * @param elapsed The time elapsed (ms) from the loca user calling `joinChannel`
    * until this callback is triggered.
    */
-  virtual void onFirstRemoteAudioDecoded(const RtcConnection& connection, uid_t uid, int elapsed) {
+  virtual void onFirstRemoteAudioDecoded(const RtcConnection& connection, uid_t uid, int elapsed) __deprecated {
     (void)connection;
     (void)uid;
     (void)elapsed;
@@ -778,13 +732,13 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    *
    * @param connection The RtcConnection object.
    * @param state State of the local audio. See #LOCAL_AUDIO_STREAM_STATE.
-   * @param error The error information of the local audio.
-   * See #LOCAL_AUDIO_STREAM_ERROR.
+   * @param reason The reason information of the local audio.
+   * See #LOCAL_AUDIO_STREAM_REASON.
    */
-  virtual void onLocalAudioStateChanged(const RtcConnection& connection, LOCAL_AUDIO_STREAM_STATE state, LOCAL_AUDIO_STREAM_ERROR error) {
+  virtual void onLocalAudioStateChanged(const RtcConnection& connection, LOCAL_AUDIO_STREAM_STATE state, LOCAL_AUDIO_STREAM_REASON reason) {
     (void)connection;
     (void)state;
-    (void)error;
+    (void)reason;
   }
 
   /** Occurs when the remote audio state changes.
@@ -876,7 +830,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   remote user.
   */
   virtual void onRemoteAudioTransportStats(const RtcConnection& connection, uid_t remoteUid, unsigned short delay, unsigned short lost,
-                                           unsigned short rxKBitRate) {
+                                           unsigned short rxKBitRate) __deprecated {
     (void)connection;
     (void)remoteUid;
     (void)delay;
@@ -903,7 +857,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   the remote user.
   */
   virtual void onRemoteVideoTransportStats(const RtcConnection& connection, uid_t remoteUid, unsigned short delay, unsigned short lost,
-                                           unsigned short rxKBitRate) {
+                                           unsigned short rxKBitRate) __deprecated {
     (void)connection;
     (void)remoteUid;
     (void)delay;
@@ -992,6 +946,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
     (void)success;
     (void)reason;
   }
+
   /**
    * Occurs when the user account is updated.
    *
@@ -999,10 +954,10 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    * @param remoteUid The user ID.
    * @param userAccount The user account.
    */
-  virtual void onUserAccountUpdated(const RtcConnection& connection, uid_t remoteUid, const char* userAccount){
+  virtual void onUserAccountUpdated(const RtcConnection& connection, uid_t remoteUid, const char* remoteUserAccount){
     (void)connection;
     (void)remoteUid;
-    (void)userAccount;
+    (void)remoteUserAccount;
   }
 
   /** Reports the result of taking a video snapshot.
@@ -1042,6 +997,48 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
     (void)uid;
     (void)currentEvent;
     (void)tracingInfo;
+  }
+
+  /**
+   * Occurs when receive use rtm response.
+   *
+   * @param connection The RtcConnection object.
+   * @param code The error code:
+   */
+  virtual void onSetRtmFlagResult(const RtcConnection& connection, int code) {
+    (void)connection;
+    (void)code;
+  }
+  /**
+   * Occurs when receive a video transcoder stream which has video layout info.
+   *
+   * @param connection The RtcConnection object.
+   * @param uid user id of the transcoded stream.
+   * @param width width of the transcoded stream.
+   * @param height height of the transcoded stream.
+   * @param layoutCount count of layout info in the transcoded stream.
+   * @param layoutlist video layout info list of the transcoded stream.
+   */
+  virtual void onTranscodedStreamLayoutInfo(const RtcConnection& connection, uid_t uid, int width, int height, int layoutCount,const VideoLayout* layoutlist) {
+    (void)uid;
+    (void)width;
+    (void)height;
+    (void)layoutCount;
+    (void)layoutlist;
+  }
+
+  /**
+   * The audio metadata received.
+   *
+   * @param connection The RtcConnection object.
+   * @param uid ID of the remote user.
+   * @param metadata The pointer of metadata
+   * @param length Size of metadata
+   * @technical preview 
+   */
+  virtual void onAudioMetadataReceived(const RtcConnection& connection, uid_t uid, const char* metadata, size_t length) {
+    (void)metadata;
+    (void)length;
   }
 };
 
@@ -1129,6 +1126,55 @@ public:
      * - < 0: Failure.
      */
     virtual int leaveChannelEx(const RtcConnection& connection, const LeaveChannelOptions& options) = 0;
+
+  /**
+    * Leaves a channel with the channel ID and user account.
+    *
+    * This method allows a user to leave the channel, for example, by hanging up or exiting a call.
+    *
+    * This method is an asynchronous call, which means that the result of this method returns even before
+    * the user has not actually left the channel. Once the user successfully leaves the channel, the
+    * SDK triggers the \ref IRtcEngineEventHandler::onLeaveChannel "onLeaveChannel" callback.
+    *
+    * @param channelId The channel name. The maximum length of this parameter is 64 bytes. Supported character scopes are:
+    * - All lowercase English letters: a to z.
+    * - All uppercase English letters: A to Z.
+    * - All numeric characters: 0 to 9.
+    * - The space character.
+    * - Punctuation characters and other symbols, including: "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+    * @param userAccount The user account. The maximum length of this parameter is 255 bytes. Ensure that you set this parameter and do not set it as null. Supported character scopes are:
+    * - All lowercase English letters: a to z.
+    * - All uppercase English letters: A to Z.
+    * - All numeric characters: 0 to 9.
+    * - The space character.
+    * - Punctuation characters and other symbols, including: "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+    * @return
+    * - 0: Success.
+    * - < 0: Failure.
+    */
+    virtual int leaveChannelWithUserAccountEx(const char* channelId, const char* userAccount) = 0;
+
+  /**
+    * Leaves a channel with the channel ID and user account and sets the options for leaving.
+    *
+    * @param channelId The channel name. The maximum length of this parameter is 64 bytes. Supported character scopes are:
+    * - All lowercase English letters: a to z.
+    * - All uppercase English letters: A to Z.
+    * - All numeric characters: 0 to 9.
+    * - The space character.
+    * - Punctuation characters and other symbols, including: "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+    * @param userAccount The user account. The maximum length of this parameter is 255 bytes. Ensure that you set this parameter and do not set it as null. Supported character scopes are:
+    * - All lowercase English letters: a to z.
+    * - All uppercase English letters: A to Z.
+    * - All numeric characters: 0 to 9.
+    * - The space character.
+    * - Punctuation characters and other symbols, including: "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+    * @param options The options for leaving the channel. See #LeaveChannelOptions.
+    * @return int
+    * - 0: Success.
+    * - < 0: Failure.
+    */
+    virtual int leaveChannelWithUserAccountEx(const char* channelId, const char* userAccount, const LeaveChannelOptions& options) = 0;
 
     /**
      *  Updates the channel media options after joining the channel.
@@ -1402,7 +1448,7 @@ public:
     /** Sets remote user parameters for spatial audio
 
     @param uid The ID of the remote user.
-    @param param spatial audio parameters: SpatialAudioParams.
+    @param param Spatial audio parameters. See SpatialAudioParams.
     @param connection The RtcConnection object.
 
     @return int
@@ -1504,7 +1550,7 @@ public:
      * - 0: Success.
      * - < 0: Failure.
      */    
-    virtual int adjustUserPlaybackSignalVolumeEx(unsigned int uid, int volume, const RtcConnection& connection) = 0;
+    virtual int adjustUserPlaybackSignalVolumeEx(uid_t uid, int volume, const RtcConnection& connection) = 0;
 
     /** Gets the current connection state of the SDK.
      @param connection The RtcConnection object.
@@ -1577,7 +1623,7 @@ public:
      * - Returns 0: Success.
      * - < 0: Failure.
      */
-    virtual int createDataStreamEx(int* streamId, DataStreamConfig& config, const RtcConnection& connection) = 0;
+    virtual int createDataStreamEx(int* streamId, const DataStreamConfig& config, const RtcConnection& connection) = 0;
     /** Sends a data stream.
      *
      * After calling \ref IRtcEngine::createDataStream "createDataStream", you can call
@@ -1730,24 +1776,20 @@ public:
       */
     virtual int stopRtmpStreamEx(const char* url, const RtcConnection& connection) = 0;
   
-    /** Starts to relay media streams across channels.
+    /** Starts relaying media streams across channels or updates the channels for media relay.
      *
+     * @since v4.2.0
      * @param configuration The configuration of the media stream relay:ChannelMediaRelayConfiguration.
      * @param connection RtcConnection.
      * @return
      * - 0: Success.
      * - < 0: Failure.
+     *   - -1(ERR_FAILED): A general error occurs (no specified reason).
+     *   - -2(ERR_INVALID_ARGUMENT): The argument is invalid.
+     *   - -5(ERR_REFUSED): The request is rejected.
+     *   - -8(ERR_INVALID_STATE): The current status is invalid, only allowed to be called when the role is the broadcaster.
      */
-    virtual int startChannelMediaRelayEx(const ChannelMediaRelayConfiguration& configuration, const RtcConnection& connection) = 0;
-  
-    /** Updates the channels for media stream relay
-     * @param configuration The media stream relay configuration: ChannelMediaRelayConfiguration.
-     * @param connection RtcConnection.
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int updateChannelMediaRelayEx(const ChannelMediaRelayConfiguration& configuration, const RtcConnection& connection) = 0;
+    virtual int startOrUpdateChannelMediaRelayEx(const ChannelMediaRelayConfiguration& configuration, const RtcConnection& connection) = 0;
   
     /** Stops the media stream relay.
      *
@@ -1758,6 +1800,10 @@ public:
      * @return
      * - 0: Success.
      * - < 0: Failure.
+     *   - -1(ERR_FAILED): A general error occurs (no specified reason).
+     *   - -2(ERR_INVALID_ARGUMENT): The argument is invalid.
+     *   - -5(ERR_REFUSED): The request is rejected.
+     *   - -7(ERR_NOT_INITIALIZED): cross channel media streams are not relayed.
      */
     virtual int stopChannelMediaRelayEx(const RtcConnection& connection) = 0;
   
@@ -1767,6 +1813,10 @@ public:
      * @return
      * - 0: Success.
      * - < 0: Failure.
+     *   - -1(ERR_FAILED): A general error occurs (no specified reason).
+     *   - -2(ERR_INVALID_ARGUMENT): The argument is invalid.
+     *   - -5(ERR_REFUSED): The request is rejected.
+     *   - -7(ERR_NOT_INITIALIZED): cross channel media streams are not relayed.
      */
     virtual int pauseAllChannelMediaRelayEx(const RtcConnection& connection) = 0;
 
@@ -1776,6 +1826,10 @@ public:
      * @return
      * - 0: Success.
      * - < 0: Failure.
+     *   - -1(ERR_FAILED): A general error occurs (no specified reason).
+     *   - -2(ERR_INVALID_ARGUMENT): The argument is invalid.
+     *   - -5(ERR_REFUSED): The request is rejected.
+     *   - -7(ERR_NOT_INITIALIZED): cross channel media streams are not relayed.
      */
     virtual int resumeAllChannelMediaRelayEx(const RtcConnection& connection) = 0;
 
@@ -1809,22 +1863,10 @@ public:
     */
     virtual int getUserInfoByUidEx(uid_t uid, rtc::UserInfo* userInfo, const RtcConnection& connection) = 0;
 
-    /**
-     * Specify video stream parameters based on video profile
-     * @param [in] width
-     *        width of video resolution in pixel
-     * @param [in] height
-     *        height of video resolution in pixel
-     * @param [in] frameRate
-     *        frame rate in fps
-     * @param [in] bitrate
-     *        bit rate in kbps
-     * @return return 0 if success or an error code
-     */
-    virtual int setVideoProfileEx(int width, int height, int frameRate, int bitrate) = 0;
-
      /**
      * Enables or disables the dual video stream mode.
+     *
+     * @deprecated v4.2.0. This method is deprecated. Use setDualStreamModeEx instead
      *
      * If dual-stream mode is enabled, the subscriber can choose to receive the high-stream
      * (high-resolution high-bitrate video stream) or low-stream (low-resolution low-bitrate video
@@ -1854,21 +1896,43 @@ public:
                                    const RtcConnection& connection) = 0;
 
     /**
-     * Turns WIFI acceleration on or off.
+     * Set the multi-layer video stream configuration.
      *
-     * @note
-     * - This method is called before and after joining a channel.
-     * - Users check the WIFI router app for information about acceleration. Therefore, if this interface is invoked, the caller accepts that the caller's name will be displayed to the user in the WIFI router application on behalf of the caller.
+     * If multi-layer is configed, the subscriber can choose to receive the coresponding layer
+     * of video stream using {@link setRemoteVideoStreamType setRemoteVideoStreamType}.
      *
-     * @param enabled
-     * - true：Turn WIFI acceleration on.
-     * - false：Turn WIFI acceleration off.
-     *
+     * @param simulcastConfig
+     * - The configuration for multi-layer video stream. It includes seven layers, ranging from
+     *   STREAM_LAYER_1 to STREAM_LOW. A maximum of 3 layers can be enabled simultaneously.
+     * @param connection The RtcConnection object.
      * @return
      * - 0: Success.
      * - < 0: Failure.
+     * @technical preview
      */
-    virtual int enableWirelessAccelerate(bool enabled) = 0;
+    virtual int setSimulcastConfigEx(const SimulcastConfig& simulcastConfig,
+                                     const RtcConnection& connection) = 0;
+    
+  /**
+    * Set the high priority user list and their fallback level in weak network condition.
+    *
+    * @note
+    * - This method can be called before and after joining a channel.
+    * - If a subscriber is set to high priority, this stream only fallback to lower stream after all normal priority users fallback to their fallback level on weak network condition if needed.
+    *
+    * @param uidList The high priority user list.
+    * @param uidNum The size of uidList.
+    * @param option The fallback level of high priority users.
+    * @param connection An output parameter which is used to control different connection instances.
+    *
+    * @return int
+    * - 0 : Success.
+    * - <0 : Failure.
+    */
+    virtual int setHighPriorityUserListEx(uid_t* uidList, int uidNum,
+                                          STREAM_FALLBACK_OPTIONS option,
+                                          const RtcConnection& connection) = 0;
+
   /**
    * Takes a snapshot of a video stream.
    *
@@ -1900,12 +1964,39 @@ public:
    */
     virtual int takeSnapshotEx(const RtcConnection& connection, uid_t uid, const char* filePath)  = 0;
 
-    /** Enables the content inspect.
-    @param enabled Whether to enable content inspect:
+  /**
+   * Takes a snapshot of a video stream.
+   *
+   * This method takes a snapshot of a video stream from the specified user, generates a JPG
+   * image, and saves it to the specified path.
+   *
+   * The method is asynchronous, and the SDK has not taken the snapshot when the method call
+   * returns. After a successful method call, the SDK triggers the `onSnapshotTaken` callback
+   * to report whether the snapshot is successfully taken, as well as the details for that
+   * snapshot.
+   *
+   * @note
+   * - Call this method after joining a channel.
+   * - This method takes a snapshot of the published video stream specified in `ChannelMediaOptions`.
+   *
+   * @param connection The RtcConnection object.
+   * @param uid The user ID. Set uid as 0 if you want to take a snapshot of the local user's video.
+   * @param config The configuration for the take snapshot. See SnapshotConfig.
+   *
+   * Ensure that the path you specify exists and is writable.
+   * @return
+   * - 0 : Success.
+   * - &lt; 0: Failure.
+   *   - -4: Incorrect observation position. Modify the input observation position according to the reqiurements specified in SnapshotConfig.
+   */
+    virtual int takeSnapshotEx(const RtcConnection& connection, uid_t uid, const media::SnapshotConfig& config)  = 0;
+    
+    /** Enables video screenshot and upload with the connection ID.
+    @param enabled Whether to enable video screenshot and upload:
     - `true`: Yes.
     - `false`: No.
-    @param config The configuration for the content inspection.
-    @param connection The RtcConnection object.
+    @param config The configuration for video screenshot and upload.
+    @param connection The connection information. See RtcConnection.
     @return
     - 0: Success.
     - < 0: Failure.
@@ -1929,6 +2020,48 @@ public:
       - -7(ERR_NOT_INITIALIZED): The SDK is not initialized. Initialize the `IRtcEngine` instance before calling this method.
      */
     virtual int startMediaRenderingTracingEx(const RtcConnection& connection) = 0;
+
+    /** Provides the technical preview functionalities or special customizations by configuring the SDK with JSON options.
+    @since v4.3.0
+    @param connection The connection information. See RtcConnection.
+    @param parameters Pointer to the set parameters in a JSON string.
+    @return
+    - 0: Success.
+    - < 0: Failure.
+    */
+    virtual int setParametersEx(const RtcConnection& connection, const char* parameters) = 0;
+
+    /**
+     * Gets the current call ID.
+     *
+     * When a user joins a channel on a client, a `callId` is generated to identify
+     * the call.
+     *
+     * After a call ends, you can call `rate` or `complain` to gather feedback from the customer.
+     * These methods require a `callId` parameter. To use these feedback methods, call the this
+     * method first to retrieve the `callId` during the call, and then pass the value as an
+     * argument in the `rate` or `complain` method after the call ends.
+     *
+     * @param callId The reference to the call ID.
+     * @param connection The RtcConnection object.
+     * @return
+     * - The call ID if the method call is successful.
+     * - < 0: Failure.
+    */
+    virtual int getCallIdEx(agora::util::AString& callId, const RtcConnection& connection) = 0;
+
+    /**
+     * send audio metadata
+     * @since v4.3.1
+     * @param connection The RtcConnection object.
+     * @param metadata The pointer of metadata
+     * @param length Size of metadata
+     * @return
+     * - 0: success
+     * - <0: failure
+     * @technical preview
+    */
+    virtual int sendAudioMetadataEx(const RtcConnection& connection, const char* metadata, size_t length) = 0;
 };
 
 }  // namespace rtc
